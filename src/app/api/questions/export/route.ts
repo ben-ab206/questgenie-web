@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateRequestId, calculateProcessingTime } from '@/app/api/utils';
+import { calculateProcessingTime } from '@/lib/utils';
 import { createClient } from '../../supabase/server';
 
 export async function GET(request: NextRequest) {
-  const requestId = generateRequestId();
   const startTime = Date.now();
 
   try {
@@ -16,7 +15,6 @@ export async function GET(request: NextRequest) {
         error: 'Authentication required',
         metadata: {
           timestamp: new Date().toISOString(),
-          requestId,
           processingTime: calculateProcessingTime(startTime)
         }
       }, { status: 401 });
@@ -65,7 +63,6 @@ export async function GET(request: NextRequest) {
       },
       metadata: {
         timestamp: new Date().toISOString(),
-        requestId,
         processingTime
       }
     });
@@ -79,7 +76,6 @@ export async function GET(request: NextRequest) {
       error: error instanceof Error ? error.message : 'Failed to export questions',
       metadata: {
         timestamp: new Date().toISOString(),
-        requestId,
         processingTime
       }
     }, { status: 500 });

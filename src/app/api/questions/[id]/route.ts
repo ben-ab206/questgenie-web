@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateRequestId, calculateProcessingTime } from '@/app/api/utils';
+import { calculateProcessingTime } from '@/lib/utils';
 import { createClient } from '../../supabase/server';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const requestId = generateRequestId();
   const startTime = Date.now();
 
   try {
@@ -19,7 +18,6 @@ export async function GET(
         error: 'Authentication required',
         metadata: {
           timestamp: new Date().toISOString(),
-          requestId,
           processingTime: calculateProcessingTime(startTime)
         }
       }, { status: 401 });
@@ -39,7 +37,6 @@ export async function GET(
           error: 'Question not found',
           metadata: {
             timestamp: new Date().toISOString(),
-            requestId,
             processingTime: calculateProcessingTime(startTime)
           }
         }, { status: 404 });
@@ -54,7 +51,6 @@ export async function GET(
       data: question,
       metadata: {
         timestamp: new Date().toISOString(),
-        requestId,
         processingTime
       }
     });
@@ -68,7 +64,6 @@ export async function GET(
       error: error instanceof Error ? error.message : 'Failed to fetch question',
       metadata: {
         timestamp: new Date().toISOString(),
-        requestId,
         processingTime
       }
     }, { status: 500 });
@@ -79,7 +74,6 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const requestId = generateRequestId();
   const startTime = Date.now();
 
   try {
@@ -92,7 +86,6 @@ export async function DELETE(
         error: 'Authentication required',
         metadata: {
           timestamp: new Date().toISOString(),
-          requestId,
           processingTime: calculateProcessingTime(startTime)
         }
       }, { status: 401 });
@@ -115,7 +108,6 @@ export async function DELETE(
       data: { deleted: true },
       metadata: {
         timestamp: new Date().toISOString(),
-        requestId,
         processingTime
       }
     });
@@ -129,7 +121,6 @@ export async function DELETE(
       error: error instanceof Error ? error.message : 'Failed to delete question',
       metadata: {
         timestamp: new Date().toISOString(),
-        requestId,
         processingTime
       }
     }, { status: 500 });

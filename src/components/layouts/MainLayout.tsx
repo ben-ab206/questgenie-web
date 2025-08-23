@@ -1,19 +1,22 @@
-import { signOutAction } from "../../app/api/actions/auth"
-import { getUser } from "../../app/api/auth"
-import Sidebar from "../Sidebar"
+
+import { getUser } from "@/app/api/auth";
+import ClientMainLayout from "./ClientMainLayout";
+import { signOutAction } from "@/app/api/actions/auth";
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
-    const user = await getUser()
+    const user = await getUser();
 
-    if (user) {
-        return (
-            <div className="flex min-h-screen bg-gray-50">
-                <Sidebar userEmail={user?.email} userName={user?.name} onLogout={signOutAction} />
-
-                <main className="flex-1 p-8">
-                    <div className="max-w-4xl mx-auto">{children}</div>
-                </main>
-            </div>
-        )
+    if (!user) {
+        // Handle unauthenticated state - redirect or show login
+        return null; // or redirect to login page
     }
+
+    return (
+        <ClientMainLayout 
+            user={user}
+            signOutAction={signOutAction}
+        >
+            {children}
+        </ClientMainLayout>
+    );
 }

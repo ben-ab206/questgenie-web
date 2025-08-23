@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Question, QuestionConfig } from '../../../types/questions';
-import { generateQuestionId, truncateContent } from '../utils';
+import { truncateContent } from '../../../lib/utils';
 
 export function parseResponse(response: string, config: QuestionConfig): Question[] {
   try {
@@ -40,7 +40,7 @@ function createQuestion(item: any, config: QuestionConfig, index: number): Quest
   }
 
   return {
-    id: generateQuestionId(),
+    id: "88",
     type: config.type,
     difficulty: config.difficulty,
     language: config.language,

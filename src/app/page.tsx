@@ -1,6 +1,6 @@
 import MainLayout from '@/components/layouts/MainLayout'
-import { requireAuth } from './api/auth'
-import { signOutAction } from './api/actions/auth'
+import { requireAuth } from '@/app/api/auth'
+import { signOutAction } from '@/app/api/actions/auth'
 
 export default async function HomePage() {
  const user = await requireAuth()

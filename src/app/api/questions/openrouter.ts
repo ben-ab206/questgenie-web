@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 import { OpenRouterConfig } from '../../../types/questions';
 import { OPENROUTER_CONFIG } from '../config/question.config';
 import { validateApiKey } from '../validation';
-import { delay } from '../utils';
+import { delay } from '../../../lib/utils';
 
 export class OpenRouterClient {
   private config: Required<OpenRouterConfig>;

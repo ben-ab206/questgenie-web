@@ -1,6 +1,6 @@
+import { User } from '@/types/auth'
 import { createClient } from './supabase/server'
 import { redirect } from 'next/navigation'
-import { User } from '../../types/auth'
 
 export const getUser = async () : Promise<User | undefined> => {
   const supabase = await createClient()

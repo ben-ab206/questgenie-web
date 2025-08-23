@@ -25,6 +25,7 @@ export class APIClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error(errorData);
       throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
     }
 
@@ -58,6 +59,7 @@ export class APIClient {
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error(errorData);
       throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
     }
 
@@ -69,6 +71,7 @@ export class APIClient {
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error(errorData);
       throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
     }
 
@@ -82,6 +85,7 @@ export class APIClient {
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error(errorData);
       throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
     }
 
@@ -101,6 +105,7 @@ export class APIClient {
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error(errorData);
       throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
     }
 
@@ -125,6 +130,7 @@ export class APIClient {
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error(errorData);
       throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
     }
 

@@ -63,7 +63,7 @@ function getTypeInstruction(type: QuestionType): string {
 
 function getDifficultyInstruction(difficulty: DifficultyLevel): string {
   const instructions = {
-    [DifficultyLevel.LOW]: 'Focus on basic recall and simple facts from the content.',
+    [DifficultyLevel.EASY]: 'Focus on basic recall and simple facts from the content.',
     [DifficultyLevel.MEDIUM]: 'Test comprehension and application of concepts.',
     [DifficultyLevel.HIGH]: 'Demand critical thinking and complex reasoning about the content.',
   };

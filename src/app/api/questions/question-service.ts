@@ -1,15 +1,15 @@
-'use server'
-
-import { 
-  Question, 
-  QuestionType, 
-  DifficultyLevel, 
+import {
+  Question,
+  QuestionType,
+  DifficultyLevel,
   Language,
-  BatchGenerationRequest,
-  APIResponse
+  // BatchGenerationRequest,
+  APIResponse,
+  MCQQuestion,
+  // MCQQuestion
 } from '../../../types/questions';
+// import { shuffleArray } from '../utils';
 import { QuestionGenerator } from './question-generator';
-import { shuffleArray } from '../utils';
 
 export class QuestionService {
   private generator: QuestionGenerator;
@@ -18,30 +18,30 @@ export class QuestionService {
     this.generator = new QuestionGenerator(apiKey, model);
   }
 
-  async generateMixedQuestions(
-    content: string,
-    quantity: number = 10,
-    difficulty: DifficultyLevel = DifficultyLevel.MEDIUM,
-    language: Language = Language.ENGLISH,
-    topic?: string
-  ): Promise<Question[]> {
-    const distribution = this.calculateQuestionDistribution(quantity);
-    const configs = distribution.map(({ type, count }) => ({
-      type,
-      quantity: count,
-      difficulty,
-      language,
-      content,
-      topic
-    }));
+  // async generateMixedQuestions(
+  //   content: string,
+  //   quantity: number = 10,
+  //   difficulty: DifficultyLevel = DifficultyLevel.MEDIUM,
+  //   language: Language = Language.ENGLISH,
+  //   topic?: string
+  // ): Promise<Question[] | MCQQuestion[]> {
+  //   const distribution = this.calculateQuestionDistribution(quantity);
+  //   const configs = distribution.map(({ type, count }) => ({
+  //     type,
+  //     quantity: count,
+  //     difficulty,
+  //     language,
+  //     content,
+  //     topic
+  //   }));
 
-    const results = await this.generator.generateBatch(configs);
-    const allQuestions = results
-      .filter(result => result.success)
-      .flatMap(result => result.questions);
+  //   const results = await this.generator.generateBatch(configs);
+  //   const allQuestions = results
+  //     .filter(result => result.success)
+  //     .flatMap(result => result.questions);
 
-    return shuffleArray(allQuestions).slice(0, quantity);
-  }
+  //   return shuffleArray(allQuestions).slice(0, quantity);
+  // }
 
   async generateSpecificType(
     content: string,
@@ -50,8 +50,15 @@ export class QuestionService {
     difficulty: DifficultyLevel = DifficultyLevel.MEDIUM,
     language: Language = Language.ENGLISH,
     topic?: string
-  ): Promise<Question[]> {
-    const result = await this.generator.generateQuestions({
+  ): Promise<Question[] | MCQQuestion[]> {
+    const result = type === QuestionType.MULTIPLE_CHOICE ? await this.generator.generateMCQQuestions({
+      type,
+      quantity,
+      difficulty,
+      language,
+      content,
+      topic
+    }) : await this.generator.generateQuestions({
       type,
       quantity,
       difficulty,
@@ -67,37 +74,36 @@ export class QuestionService {
     return result.questions;
   }
 
-  async processBatchRequest(request: BatchGenerationRequest): Promise<Question[]> {
-    const allQuestions: Question[] = [];
+  // async processBatchRequest(request: BatchGenerationRequest): Promise<Question[]> {
+  //   const allQuestions: Question[] = [];
 
-    for (const contentInput of request.contents) {
-      const config = {
-        ...request.globalConfig,
-        content: contentInput.text,
-        topic: contentInput.topic || request.globalConfig.topic,
-        quantity: contentInput.quantity || 5,
-        difficulty: contentInput.difficulty || request.globalConfig.difficulty || DifficultyLevel.MEDIUM,
-        type: contentInput.type || request.globalConfig.type || QuestionType.MULTIPLE_CHOICE,
-        language: request.globalConfig.language || Language.ENGLISH
-      };
+  //   for (const contentInput of request.contents) {
+  //     const config = {
+  //       ...request.globalConfig,
+  //       content: contentInput.text,
+  //       topic: contentInput.topic || request.globalConfig.topic,
+  //       quantity: contentInput.quantity || 5,
+  //       difficulty: contentInput.difficulty || request.globalConfig.difficulty || DifficultyLevel.MEDIUM,
+  //       type: contentInput.type || request.globalConfig.type || QuestionType.MULTIPLE_CHOICE,
+  //       language: request.globalConfig.language || Language.ENGLISH
+  //     };
 
-      const questions = await this.generateMixedQuestions(
-        config.content,
-        config.quantity,
-        config.difficulty,
-        config.language,
-        config.topic
-      );
+  //     const questions = await this.generateMixedQuestions(
+  //       config.content,
+  //       config.quantity,
+  //       config.difficulty,
+  //       config.language,
+  //       config.topic
+  //     );
 
-      allQuestions.push(...questions);
-    }
+  //     allQuestions.push(...questions);
+  //   }
 
-    return allQuestions;
-  }
+  //   return allQuestions;
+  // }
 
   formatAPIResponse<T>(
     data: T,
-    requestId: string,
     processingTime: number
   ): APIResponse<T> {
     return {
@@ -105,7 +111,6 @@ export class QuestionService {
       data,
       metadata: {
         timestamp: new Date().toISOString(),
-        requestId,
         processingTime
       }
     };
@@ -113,7 +118,6 @@ export class QuestionService {
 
   formatErrorResponse(
     error: string,
-    requestId: string,
     processingTime: number
   ): APIResponse<null> {
     return {
@@ -121,7 +125,6 @@ export class QuestionService {
       error,
       metadata: {
         timestamp: new Date().toISOString(),
-        requestId,
         processingTime
       }
     };

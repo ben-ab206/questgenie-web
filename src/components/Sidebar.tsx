@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { cn } from "../app/api/utils";
+import { cn } from "@/lib/utils"
 import { Brain, Home, Plus, List, LogOut, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

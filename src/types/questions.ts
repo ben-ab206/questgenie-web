@@ -7,6 +7,14 @@ export interface QuestionConfig {
   topic?: string;
 }
 
+export interface MCQOption {
+  A: string;
+  B: string;
+  C: string;
+  D: string;
+  E?: string;
+}
+
 export interface Question {
   id: string;
   type: QuestionType;
@@ -23,7 +31,7 @@ export interface Question {
 
 export interface GenerationResult {
   success: boolean;
-  questions: Question[];
+  questions: Question[] | MCQQuestion[];
   error?: string;
   contentHash?: string;
   metadata: GenerationMetadata;
@@ -55,7 +63,6 @@ export interface APIResponse<T> {
   error?: string;
   metadata: {
     timestamp: string;
-    requestId: string;
     processingTime: number;
   };
 }
@@ -65,13 +72,13 @@ export enum QuestionType {
   TRUE_FALSE = 'true_false',
   FILL_IN_THE_BLANK = 'fill_in_the_blank',
   SHORT_ANSWER = 'short_answer',
-//   ESSAY = 'essay',
-//   MATCHING = 'matching',
-//   ORDERING = 'ordering'
+  //   ESSAY = 'essay',
+  //   MATCHING = 'matching',
+  //   ORDERING = 'ordering'
 }
 
 export enum DifficultyLevel {
-  LOW = 'low',
+  EASY = 'easy',
   MEDIUM = 'medium',
   HIGH = 'high'
 }
@@ -87,4 +94,45 @@ export interface OpenRouterConfig {
   model?: string;
   timeout?: number;
   maxRetries?: number;
+}
+
+export interface MCQConfig {
+  language: Language;
+  difficulty: DifficultyLevel;
+  topic?: string;
+  quantity: number;
+  content: string;
+  optionsCount?: 4 | 5;
+  includeExplanation?: boolean;
+  avoidAmbiguity?: boolean;
+  focusOnKeyPoints?: boolean;
+}
+
+export interface MCQQuestion {
+  id?: number,
+  type: string,
+  difficulty: string,
+  language: string,
+  question: string,
+  answer: string,
+  options: MCQOption[],
+  correctOptionIndex: number,
+  topic?: string,
+  contentSource: string,
+  explanation?: string,
+  contentReference?: string
+}
+
+export interface MCQResponse {
+  question: string;
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+    E?: string;
+  };
+  correctAnswer: 'A' | 'B' | 'C' | 'D' | 'E';
+  contentReference?: string;
+  explanation?: string;
 }
