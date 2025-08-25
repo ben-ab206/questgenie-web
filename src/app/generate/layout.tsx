@@ -6,11 +6,7 @@ export default function GenerateLayout({
     children: React.ReactNode
 }) {
     return (
-        <html lang="en">
-            <body>
-                <MainLayout>
-                    {children}</MainLayout>
-            </body>
-        </html>
+        <MainLayout>
+            {children}</MainLayout>
     )
 }

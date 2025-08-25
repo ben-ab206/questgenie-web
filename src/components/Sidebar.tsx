@@ -27,7 +27,7 @@ export default function Sidebar({
 
   const navItems = [
     { href: "/", icon: Home, label: "Dashboard", testId: "nav-dashboard" },
-    { href: "/create", icon: Plus, label: "Generate Questions", testId: "nav-create" },
+    { href: "/generate", icon: Plus, label: "Generate Questions", testId: "nav-create" },
     { href: "/quizzes", icon: List, label: "Question Bank", testId: "nav-quizzes" },
   ];
 

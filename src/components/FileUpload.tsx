@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload } from "lucide-react";
-import { cn } from "../app/api/utils";
+import { cn } from "@/lib/utils";
 
 interface FileUploadProps {
   onFileSelect: (content: string, fileName: string) => void;
