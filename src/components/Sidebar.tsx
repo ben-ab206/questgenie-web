@@ -49,6 +49,10 @@ export default function Sidebar({
     return email.split('@')[0].slice(0, 2).toUpperCase();
   };
 
+  const isActiveRoute = (href: string) => {
+    return pathname === href || (href === "/" && pathname === "/");
+  };
+
   return (
     <div className={cn(
       "h-screen bg-white border-r border-gray-200 flex flex-col transition-all duration-300",
@@ -119,17 +123,31 @@ export default function Sidebar({
               key={href}
               onClick={() => handleNavClick(href)}
               className={cn(
-                "flex items-center w-full rounded-lg font-medium transition-all duration-300",
+                "flex items-center w-full rounded-lg font-medium transition-all duration-300 relative",
                 isCollapsed ? "px-3 py-3 justify-center" : "px-4 py-3 space-x-3",
-                pathname === href || (href === "/dashboard" && pathname === "/")
-                  ? "bg-primary/10 text-primary"
-                  : "text-gray-600 hover:bg-gray-50"
+                isActiveRoute(href)
+                  ? "bg-primary/10 text-primary shadow-sm border border-primary/20" 
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
               )}
               data-testid={testId}
               title={isCollapsed ? label : undefined}
             >
-              <Icon className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && <span>{label}</span>}
+              {/* Active indicator bar */}
+              {isActiveRoute(href) && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+              )}
+              <Icon className={cn(
+                "w-5 h-5 flex-shrink-0 transition-colors duration-200",
+                isActiveRoute(href) ? "text-primary" : ""
+              )} />
+              {!isCollapsed && (
+                <span className={cn(
+                  "transition-colors duration-200",
+                  isActiveRoute(href) ? "text-primary" : ""
+                )}>
+                  {label}
+                </span>
+              )}
             </button>
           )
         ))}
@@ -140,14 +158,14 @@ export default function Sidebar({
           "flex items-center mb-3 transition-all duration-300",
           isCollapsed ? "justify-center" : "space-x-3"
         )}>
-          <div className="w-10 h-10 border rounded-full flex items-center justify-center">
-            <span className="font-semibold text-sm">
+          <div className="w-10 h-10 border rounded-full flex items-center justify-center bg-gray-50">
+            <span className="font-semibold text-sm text-gray-700">
               {getInitials(userName, userEmail)}
             </span>
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate" data-testid="text-username">
+              <p className="font-medium text-sm truncate text-gray-800" data-testid="text-username">
                 {userName}
               </p>
             </div>
@@ -157,7 +175,7 @@ export default function Sidebar({
           variant="ghost" 
           size="sm" 
           className={cn(
-            "text-gray-600 hover:text-gray-900 transition-all duration-300",
+            "text-gray-600 hover:text-red-600 hover:bg-red-50 transition-all duration-300",
             isCollapsed ? "w-10 h-10 p-0" : "w-full justify-start"
           )}
           onClick={handleLogout}
