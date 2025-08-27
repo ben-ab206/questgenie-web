@@ -6,6 +6,7 @@ import {
   // BatchGenerationRequest,
   APIResponse,
   MCQQuestion,
+  TrueFalseQuestion,
   // MCQQuestion
 } from '../../../types/questions';
 // import { shuffleArray } from '../utils';
@@ -50,7 +51,7 @@ export class QuestionService {
     difficulty: DifficultyLevel = DifficultyLevel.MEDIUM,
     language: Language = Language.ENGLISH,
     topic?: string
-  ): Promise<Question[] | MCQQuestion[]> {
+  ): Promise<Question[] | MCQQuestion[]  | TrueFalseQuestion[]> {
     const result = type === QuestionType.MULTIPLE_CHOICE ? await this.generator.generateMCQQuestions({
       type,
       quantity,
@@ -58,14 +59,22 @@ export class QuestionService {
       language,
       content,
       topic
-    }) : await this.generator.generateQuestions({
+    }) : type === QuestionType.TRUE_FALSE ? await this.generator.generateTrueFalseQuestions({
       type,
       quantity,
       difficulty,
       language,
       content,
       topic
-    });
+    })
+      : await this.generator.generateQuestions({
+        type,
+        quantity,
+        difficulty,
+        language,
+        content,
+        topic
+      });
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to generate questions');

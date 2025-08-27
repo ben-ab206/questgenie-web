@@ -31,7 +31,7 @@ export interface Question {
 
 export interface GenerationResult {
   success: boolean;
-  questions: Question[] | MCQQuestion[];
+  questions: Question[] | MCQQuestion[] | TrueFalseQuestion[];
   error?: string;
   contentHash?: string;
   metadata: GenerationMetadata;
@@ -135,4 +135,53 @@ export interface MCQResponse {
   correctAnswer: 'A' | 'B' | 'C' | 'D' | 'E';
   contentReference?: string;
   explanation?: string;
+}
+
+export interface FillInBlankConfig {
+  language: Language;
+  difficulty: DifficultyLevel;
+  topic?: string;
+  quantity: number;
+  content: string;
+  includeExplanation?: boolean;
+  avoidAmbiguity?: boolean;
+  focusOnKeyPoints?: boolean;
+  blankType?: 'single' | 'multiple' | 'mixed'; 
+  provideChoices?: boolean; 
+  choicesCount?: number;
+  contextLength?: 'short' | 'medium' | 'long';
+}
+
+export interface TrueFalseConfig {
+  language: Language;
+  difficulty: DifficultyLevel;
+  topic?: string;
+  quantity: number;
+  content: string;
+  includeExplanation?: boolean;
+  avoidAmbiguity?: boolean;
+  focusOnKeyPoints?: boolean;
+  balanceAnswers?: boolean; // Whether to balance true/false distribution
+  requireJustification?: boolean; // Whether false statements need correction
+}
+
+export interface TrueFalseResponse {
+  statement: string;
+  answer: boolean;
+  contentReference: string;
+  explanation?: string;
+  correction?: string;
+}
+
+export interface TrueFalseQuestion {
+  id?: string,
+  type: QuestionType.TRUE_FALSE;
+  question: string;
+  answer: string;
+  language: string;
+  difficulty: DifficultyLevel;
+  explanation?: string;
+  contentReference?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  options?: any[],
 }

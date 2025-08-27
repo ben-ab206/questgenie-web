@@ -15,7 +15,7 @@ export const SUPPORTED_MODELS = [
 
 export const QUESTION_LIMITS = {
   minContentLength: 50,
-  maxContentLength: 50000,
+  maxContentLength: 100000,
   minQuantity: 1,
   maxQuantity: 20
 } as const;

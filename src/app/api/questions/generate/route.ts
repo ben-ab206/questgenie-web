@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
       language = Language.ENGLISH,
       type,
       topic,
+      source,
       model = 'openai/gpt-4'
     } = body;
 
@@ -62,7 +63,11 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         type: type,
         content: content,
-        topic: topic
+        topic: topic,
+        source: source,
+        metadata: {
+          originalContentLength: content.length,
+        }
       })
       .select()
       .single();
@@ -86,6 +91,20 @@ export async function POST(request: NextRequest) {
             difficulty: q.difficulty,
             type: q.type,
             options: q.options,
+          }))
+        );
+      dbError = error;
+    } if(type === QuestionType.TRUE_FALSE){
+      const { error } = await supabase
+        .from('questions_bank')
+        .insert(
+          questions.map(q => ({
+            subject_id: subject.id,
+            question_text: q.question,
+            answer_text: q.answer,
+            language: q.language,
+            difficulty: q.difficulty,
+            type: q.type,
           }))
         );
       dbError = error;

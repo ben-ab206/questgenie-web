@@ -1,6 +1,6 @@
 "use client"
 
-import { generateQuestions } from "@/services/questions.services"
+import { generateQuestions, generateQuestionsFromFile } from "@/services/questions.services"
 import { DifficultyLevel, QuestionType } from "@/types/questions"
 import { useMutation } from "@tanstack/react-query"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,14 +23,40 @@ const GeneratePage = () => {
             content: content,
             difficulty: difficulty,
             quantity: questionCount,
-            type: questionTypes[0]
+            type: questionTypes[0],
+            source: sourceType,
         }),
-        onSuccess: (data) => console.log(data)
+        onSuccess: (data) => {
+            toast({
+                title: "Success",
+                description: "Successfully, generated ",
+                variant: "default",
+            });
+            console.info(data)
+        }
+    })
+
+    const { mutateAsync: generateQAFromFile, isPending: isGeneratingQAFromFile } = useMutation({
+        mutationFn: () => generateQuestionsFromFile({
+            file: uploadFile!,
+            difficulty: difficulty,
+            quantity: questionCount,
+            type: questionTypes[0],
+            source: sourceType,
+        }),
+        onSuccess: (data) => {
+            toast({
+                title: "Success",
+                description: "Successfully, generated from File",
+                variant: "default",
+            });
+            console.info(data)
+        }
     })
 
     const { toast } = useToast();
 
-    const [fileName, setFileName] = useState("");
+    const [ uploadFile, setUploadFile] = useState<File | undefined>(undefined);
     const [content, setContent] = useState("");
     const [sourceType, setSourceType] = useState<"text" | "file" | "youtube" | "image">("text");
     const [youtubeUrl, setYoutubeUrl] = useState("");
@@ -47,34 +73,21 @@ const GeneratePage = () => {
 
     const handleQuestionTypeChange = (type: QuestionType, checked: boolean) => {
         if (checked) {
-            setQuestionTypes([...questionTypes, type]);
+            setQuestionTypes([type]);
         } else {
             setQuestionTypes(questionTypes.filter(t => t !== type));
         }
     };
 
-    const handleFileSelect = (fileContent: string, selectedFileName: string) => {
-        setContent(fileContent);
-        setFileName(selectedFileName);
+    const handleFileSelect = (data: File) => {
+        setUploadFile(data);
         setSourceType("file");
-        toast({
-            title: "File Uploaded",
-            description: `Successfully loaded content from ${selectedFileName}`,
-        });
     };
 
     const handleGenerateQuestions = async () => {
-    if (!content.trim()) {
-      toast({
-        title: "No Content",
-        description: "Please provide content or upload a file first",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    await generateQA();
-  };
+        if(sourceType === "text") await generateQA();
+        if(sourceType === "file") await generateQAFromFile();
+    };
 
     const handleFileError = (error: string) => {
         toast({
@@ -138,23 +151,12 @@ const GeneratePage = () => {
                         <div className="space-y-4">
                             <div className="text-center">
                                 <FileUpload onFileSelect={handleFileSelect} onError={handleFileError} />
-                                {fileName && (
+                                {uploadFile && (
                                     <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                        <p className="text-sm text-green-700">✓ Loaded content from: {fileName}</p>
+                                        <p className="text-sm text-green-700">✓ Loaded content from: {uploadFile.name}</p>
                                     </div>
                                 )}
                             </div>
-                            {content && (
-                                <div className="space-y-3">
-                                    <Label>Extracted Content</Label>
-                                    <Textarea
-                                        value={content}
-                                        onChange={(e) => setContent(e.target.value)}
-                                        className="h-32 resize-none"
-                                        data-testid="extracted-content-textarea"
-                                    />
-                                </div>
-                            )}
                         </div>
                     </TabsContent>
 
@@ -251,13 +253,31 @@ const GeneratePage = () => {
                                 />
                                 <Label htmlFor="mcq" className="text-sm">Multiple Choice (MCQ)</Label>
                             </div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id={QuestionType.TRUE_FALSE}
+                                    checked={questionTypes.includes(QuestionType.TRUE_FALSE)}
+                                    onCheckedChange={(checked) => handleQuestionTypeChange(QuestionType.TRUE_FALSE, !!checked)}
+                                    data-testid="question-type-tf"
+                                />
+                                <Label htmlFor="mcq" className="text-sm">True / False</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id={QuestionType.FILL_IN_THE_BLANK}
+                                    checked={questionTypes.includes(QuestionType.FILL_IN_THE_BLANK)}
+                                    onCheckedChange={(checked) => handleQuestionTypeChange(QuestionType.FILL_IN_THE_BLANK, !!checked)}
+                                    data-testid="question-type-blank"
+                                />
+                                <Label htmlFor="mcq" className="text-sm">Fill in the blank</Label>
+                            </div>
                         </div>
                     </div>
 
                     {/* Difficulty Level */}
                     <div>
                         <Label className="text-sm font-semibold text-gray-700 mb-3 block">Difficulty Level</Label>
-                        <Select value={difficulty} onValueChange={(v)=> setDifficulty(v as DifficultyLevel)}>
+                        <Select value={difficulty} onValueChange={(v) => setDifficulty(v as DifficultyLevel)}>
                             <SelectTrigger data-testid="difficulty-select">
                                 <SelectValue />
                             </SelectTrigger>
@@ -318,12 +338,12 @@ const GeneratePage = () => {
         <div className="flex justify-end">
             <Button
                 onClick={handleGenerateQuestions}
-                disabled={isPending}
+                disabled={isPending || isGeneratingQAFromFile}
                 className="bg-primary hover:bg-primary/90"
                 data-testid="generate-questions-button"
             >
                 <Sparkles className="w-4 h-4 mr-2" />
-                {isPending ? "Generating..." : "Generate Questions"}
+                {isPending || isGeneratingQAFromFile ? "Generating..." : "Generate Questions"}
             </Button>
         </div>
     </div>

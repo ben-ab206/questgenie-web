@@ -6,6 +6,8 @@ import { validateQuestionConfig } from '../validation';
 import { calculateProcessingTime, delay, generateContentHash } from '../../../lib/utils';
 import { buildMCQPrompt } from './prompts/mcq_prompts';
 import { parseMCQResponse } from './parser_mcq';
+import { buildTrueFalsePrompt } from './prompts/tf_prompts';
+import { parseTrueFalseResponse } from './praser_truefalse';
 export class QuestionGenerator {
   private openRouterClient: OpenRouterClient;
   private model: string;
@@ -73,6 +75,40 @@ export class QuestionGenerator {
       const prompt = buildMCQPrompt(config);
       const response = await this.openRouterClient.generateResponse(prompt);
       const questions = parseMCQResponse(response, config);
+
+      return {
+        success: true,
+        questions,
+        contentHash: generateContentHash(config.content),
+        metadata: {
+          generatedAt: new Date(),
+          model: this.model,
+          processingTimeMs: calculateProcessingTime(startTime)
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        questions: [],
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        metadata: {
+          generatedAt: new Date(),
+          model: this.model,
+          processingTimeMs: calculateProcessingTime(startTime)
+        }
+      };
+    }
+  }
+
+  async generateTrueFalseQuestions(config: QuestionConfig): Promise<GenerationResult> {
+    const startTime = Date.now();
+
+    try {
+      validateQuestionConfig(config);
+      
+      const prompt = buildTrueFalsePrompt(config);
+      const response = await this.openRouterClient.generateResponse(prompt);
+      const questions = parseTrueFalseResponse(response, config);
 
       return {
         success: true,
