@@ -3,20 +3,12 @@ import { QuestionConfig, Language, DifficultyLevel, FillInBlankConfig } from "@/
 export function buildFillInBlankPrompt(config: FillInBlankConfig): string {
   const languageInstruction = getFillInBlankLanguageInstruction(config.language);
   const difficultyInstruction = getFillInBlankDifficultyInstruction(config.difficulty);
-  const topicInstruction = getFillInBlankTopicInstruction(config.topic);
-  const blankTypeInstruction = getBlankTypeInstruction(config.blankType || 'mixed');
-  const choicesInstruction = getChoicesInstruction(config.provideChoices, config.choicesCount);
-  const contextInstruction = getContextLengthInstruction(config.contextLength || 'medium');
   const qualityInstructions = getFillInBlankQualityInstructions(config);
 
   return `${languageInstruction}
 
 TASK: Generate Fill-in-the-Blank Questions
-${topicInstruction}
 ${difficultyInstruction}
-${blankTypeInstruction}
-${contextInstruction}
-${choicesInstruction}
 
 FILL-IN-THE-BLANK SPECIFIC REQUIREMENTS:
 1. Create exactly ${config.quantity} fill-in-the-blank question(s)
@@ -26,8 +18,6 @@ FILL-IN-THE-BLANK SPECIFIC REQUIREMENTS:
 5. Ensure blanks test meaningful understanding, not trivial details
 6. Make sure each blank has only one correct answer based on the content
 7. Provide sufficient context so blanks can be answered from the given material
-${config.includeExplanation ? '8. Provide brief explanations for correct answers' : ''}
-${config.provideChoices ? `9. Provide ${config.choicesCount || 4} choices for each blank, with only one correct answer` : ''}
 
 ${qualityInstructions}
 
@@ -40,8 +30,7 @@ OUTPUT FORMAT (JSON array only, no additional text):
 [
   {
     "question": "Complete sentence with blank(s) marked as ______ here",
-    "answer": "${config.blankType === 'multiple' ? '["answer1", "answer2"]' : '"single answer"'}",
-    "contentReference": "Brief reference to content section used"${config.includeExplanation ? ',\n    "explanation": "Brief explanation of why this answer is correct"' : ''}${config.provideChoices ? ',\n    "choices": ["correct answer", "wrong choice 1", "wrong choice 2", "wrong choice 3"]' : ''}
+    "answer": "answer"
   }
 ]`;
 }
@@ -77,69 +66,6 @@ function getFillInBlankDifficultyInstruction(difficulty: DifficultyLevel): strin
   };
 
   return instructions[difficulty];
-}
-
-function getFillInBlankTopicInstruction(topic?: string): string {
-  return topic 
-    ? `TOPIC FOCUS: Concentrate specifically on "${topic}" within the provided content.`
-    : 'TOPIC FOCUS: Identify and focus on the most important concepts and information in the content.';
-}
-
-function getBlankTypeInstruction(blankType: 'single' | 'multiple' | 'mixed'): string {
-  const instructions = {
-    single: `BLANK TYPE: SINGLE
-- Create questions with exactly ONE blank per question
-- Each blank should test one key concept or term
-- Ensure the missing word/phrase is essential to meaning`,
-
-    multiple: `BLANK TYPE: MULTIPLE
-- Create questions with 2-3 blanks per question  
-- Test related concepts or sequential information
-- Ensure all blanks in a question relate to the same topic or process
-- Make sure blanks don't make the sentence impossible to understand`,
-
-    mixed: `BLANK TYPE: MIXED
-- Create a variety of single and multiple blank questions
-- Use single blanks for key terms and concepts
-- Use multiple blanks for processes, sequences, or related concepts
-- Vary the complexity and blank count across questions`
-  };
-
-  return instructions[blankType];
-}
-
-function getChoicesInstruction(provideChoices?: boolean, choicesCount?: number): string {
-  if (!provideChoices) {
-    return 'CHOICES: Do not provide multiple choice options - questions should be open-ended fill-in-the-blank.';
-  }
-
-  const count = choicesCount || 4;
-  return `CHOICES: Provide exactly ${count} choices for each blank:
-- Include the correct answer and ${count - 1} plausible but incorrect options
-- Make incorrect options believable but clearly wrong based on content
-- Ensure choices are similar in length and grammatical structure
-- Avoid obvious giveaways in choice wording`;
-}
-
-function getContextLengthInstruction(contextLength: 'short' | 'medium' | 'long'): string {
-  const instructions = {
-    short: `CONTEXT LENGTH: SHORT
-- Use 1-2 sentences with blanks
-- Focus on concise, direct statements
-- Ensure sufficient context despite brevity`,
-
-    medium: `CONTEXT LENGTH: MEDIUM
-- Use 2-3 sentences with blanks
-- Provide balanced context and challenge
-- Include enough information to answer from content`,
-
-    long: `CONTEXT LENGTH: LONG
-- Use 3-4 sentences or a short paragraph with blanks
-- Provide rich context and multiple related concepts
-- Test understanding of broader relationships and processes`
-  };
-
-  return instructions[contextLength];
 }
 
 function getFillInBlankQualityInstructions(config: FillInBlankConfig): string {
@@ -203,12 +129,6 @@ export function buildFillInBlankFromQuestionConfig(config: QuestionConfig): stri
     topic: config.topic,
     quantity: config.quantity,
     content: config.content,
-    blankType: 'mixed',
-    includeExplanation: false,
-    avoidAmbiguity: true,
-    focusOnKeyPoints: true,
-    provideChoices: false,
-    contextLength: 'medium'
   };
 
   return buildFillInBlankPrompt(fibConfig);
@@ -220,7 +140,6 @@ export function buildMultipleChoiceFillInBlankPrompt(
   quantity: number = 5,
   language: Language = Language.ENGLISH,
   difficulty: DifficultyLevel = DifficultyLevel.MEDIUM,
-  choicesCount: number = 4
 ): string {
   
   const config: FillInBlankConfig = {
@@ -228,13 +147,6 @@ export function buildMultipleChoiceFillInBlankPrompt(
     difficulty,
     quantity,
     content,
-    blankType: 'single',
-    includeExplanation: true,
-    avoidAmbiguity: true,
-    focusOnKeyPoints: true,
-    provideChoices: true,
-    choicesCount,
-    contextLength: 'medium'
   };
 
   return buildFillInBlankPrompt(config);

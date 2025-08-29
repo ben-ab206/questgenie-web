@@ -1,4 +1,4 @@
-import { QuestionConfig, QuestionType, DifficultyLevel, Language } from '../../../types/questions';
+import { QuestionConfig, QuestionType, DifficultyLevel, Language } from '@/types/questions';
 
 export function buildPrompt(config: QuestionConfig): string {
   const languageInstruction = getLanguageInstruction(config.language);

@@ -1,16 +1,111 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(215, 25%, 11%);
+  --card: hsl(180, 7%, 97%);
+  --card-foreground: hsl(215, 25%, 11%);
+  --popover: hsl(248, 33%, 98%);
+  --popover-foreground: hsl(215, 25%, 11%);
+  --primary: hsl(244, 86%, 68%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(260, 73%, 67%);
+  --secondary-foreground: hsl(215, 25%, 11%);
+  --muted: hsl(240, 2%, 90%);
+  --muted-foreground: hsl(212, 9%, 38%);
+  --accent: hsl(38, 92%, 50%);
+  --accent-foreground: hsl(215, 25%, 11%);
+  --destructive: hsl(356, 91%, 54%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(214, 32%, 91%);
+  --input: hsl(200, 24%, 97%);
+  --ring: hsl(244, 86%, 68%);
+  --chart-1: hsl(244, 86%, 68%);
+  --chart-2: hsl(160, 100%, 36%);
+  --chart-3: hsl(38, 92%, 50%);
+  --chart-4: hsl(147, 78%, 42%);
+  --chart-5: hsl(341, 75%, 51%);
+  --sidebar: hsl(180, 7%, 97%);
+  --sidebar-foreground: hsl(215, 25%, 11%);
+  --sidebar-primary: hsl(244, 86%, 68%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(214, 52%, 93%);
+  --sidebar-accent-foreground: hsl(244, 86%, 68%);
+  --sidebar-border: hsl(205, 25%, 91%);
+  --sidebar-ring: hsl(244, 86%, 68%);
+  --font-sans: Inter, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --font-poppins: Poppins, sans-serif;
+  --radius: 0.75rem;
+  --shadow-2xs: 0px 2px 0px 0px hsl(244, 86%, 68% / 0.00);
+  --shadow-xs: 0px 2px 0px 0px hsl(244, 86%, 68% / 0.00);
+  --shadow-sm: 0px 2px 0px 0px hsl(244, 86%, 68% / 0.00), 0px 1px 2px -1px hsl(244, 86%, 68% / 0.00);
+  --shadow: 0px 2px 0px 0px hsl(244, 86%, 68% / 0.00), 0px 1px 2px -1px hsl(244, 86%, 68% / 0.00);
+  --shadow-md: 0px 2px 0px 0px hsl(244, 86%, 68% / 0.00), 0px 2px 4px -1px hsl(244, 86%, 68% / 0.00);
+  --shadow-lg: 0px 2px 0px 0px hsl(244, 86%, 68% / 0.00), 0px 4px 6px -1px hsl(244, 86%, 68% / 0.00);
+  --shadow-xl: 0px 2px 0px 0px hsl(244, 86%, 68% / 0.00), 0px 8px 10px -1px hsl(244, 86%, 68% / 0.00);
+  --shadow-2xl: 0px 2px 0px 0px hsl(244, 86%, 68% / 0.00);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+  
+  /* Custom colors matching design */
+  --primary-color: hsl(244, 86%, 68%);
+  --secondary-color: hsl(260, 73%, 67%);
+  --success-color: hsl(159, 79%, 36%);
+  --background-color: hsl(248, 33%, 98%);
+  --text-dark: hsl(215, 25%, 11%);
+  --accent-color: hsl(38, 92%, 50%);
+}
+
+.dark {
+  --background: hsl(0, 0%, 0%);
+  --foreground: hsl(200, 7%, 92%);
+  --card: hsl(228, 10%, 10%);
+  --card-foreground: hsl(0, 0%, 85%);
+  --popover: hsl(0, 0%, 0%);
+  --popover-foreground: hsl(200, 7%, 92%);
+  --primary: hsl(244, 86%, 68%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(195, 15%, 95%);
+  --secondary-foreground: hsl(215, 25%, 11%);
+  --muted: hsl(0, 0%, 9%);
+  --muted-foreground: hsl(210, 3%, 46%);
+  --accent: hsl(206, 70%, 8%);
+  --accent-foreground: hsl(244, 86%, 68%);
+  --destructive: hsl(356, 91%, 54%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(210, 5%, 15%);
+  --input: hsl(208, 28%, 18%);
+  --ring: hsl(244, 86%, 68%);
+  --chart-1: hsl(244, 86%, 68%);
+  --chart-2: hsl(160, 100%, 36%);
+  --chart-3: hsl(38, 92%, 50%);
+  --chart-4: hsl(147, 78%, 42%);
+  --chart-5: hsl(341, 75%, 51%);
+  --sidebar: hsl(228, 10%, 10%);
+  --sidebar-foreground: hsl(0, 0%, 85%);
+  --sidebar-primary: hsl(244, 86%, 68%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(206, 70%, 8%);
+  --sidebar-accent-foreground: hsl(244, 86%, 68%);
+  --sidebar-border: hsl(206, 16%, 26%);
+  --sidebar-ring: hsl(244, 86%, 68%);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
 }
+
 
 @media (prefers-color-scheme: dark) {
   :root {

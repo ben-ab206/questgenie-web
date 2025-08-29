@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
-import { OpenRouterConfig } from '../../../types/questions';
+import { OpenRouterConfig } from '@/types/questions';
 import { OPENROUTER_CONFIG } from '../config/question.config';
 import { validateApiKey } from '../validation';
 import { delay } from '../../../lib/utils';

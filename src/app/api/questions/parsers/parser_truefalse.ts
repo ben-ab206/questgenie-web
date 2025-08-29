@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TrueFalseQuestion, Question, QuestionConfig, QuestionType, DifficultyLevel } from '@/types/questions';
-import { truncateContent } from '../../../lib/utils';
+import { Question, QuestionConfig, QuestionType } from '@/types/questions';
 
-export function parseTrueFalseResponse(response: string, config: QuestionConfig): TrueFalseQuestion[] {
+export function parseTrueFalseResponse(response: string, config: QuestionConfig): Question[] {
   try {
     const jsonContent = extractJsonFromResponse(response);
     const parsedData = JSON.parse(jsonContent);
@@ -22,16 +21,12 @@ export function parseTrueFalseResponse(response: string, config: QuestionConfig)
 function extractJsonFromResponse(response: string): string {
   let cleaned = response.trim();
   
-  // Remove common AI response prefixes
   cleaned = cleaned.replace(/^(Here's the|Here are the|The statements are:|Generated statements:|True\/False questions:).*?\n/i, '');
   
-  // Remove code block markers
   cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
   
-  // Remove text before first [ and after last ]
   cleaned = cleaned.replace(/^[^[\{]*/, '').replace(/[^}\]]*$/, '');
 
-  // Extract JSON array
   const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
   if (!jsonMatch) {
     throw new Error('No valid JSON array found in True/False response');
@@ -40,7 +35,7 @@ function extractJsonFromResponse(response: string): string {
   return jsonMatch[0];
 }
 
-function createTrueFalseQuestion(item: any, config: QuestionConfig, index: number): TrueFalseQuestion {
+function createTrueFalseQuestion(item: any, config: QuestionConfig, index: number): Question {
   try {
     validateTrueFalseItem(item, index);
     
@@ -49,11 +44,10 @@ function createTrueFalseQuestion(item: any, config: QuestionConfig, index: numbe
     return {
       type: QuestionType.TRUE_FALSE,
       difficulty: config.difficulty,
-      language: config.language.toString(),
+      language: config.language,
       question: String(item.statement || item.question).trim(),
       answer: answer,
       explanation: item.explanation ? String(item.explanation).trim() : undefined,
-      contentReference: item.contentReference ? String(item.contentReference).trim() : undefined
     };
   } catch (error) {
     throw new Error(`Statement ${index + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -71,12 +65,10 @@ function validateTrueFalseItem(item: any, index: number): void {
     throw new Error(`Missing required field 'answer'`);
   }
 
-  // Validate statement is a meaningful string
   if (typeof statement !== 'string' || statement.trim().length === 0) {
     throw new Error(`Statement/question must be a non-empty string`);
   }
 
-  // Validate answer can be normalized
   try {
     normalizeAnswerToString(item.answer);
   } catch (error) {
@@ -85,12 +77,10 @@ function validateTrueFalseItem(item: any, index: number): void {
 }
 
 function normalizeAnswerToString(answer: any): string {
-  // Handle boolean values
   if (typeof answer === 'boolean') {
     return answer ? 'True' : 'False';
   }
 
-  // Handle string values
   if (typeof answer === 'string') {
     const lowercased = answer.toLowerCase().trim();
     
@@ -103,7 +93,6 @@ function normalizeAnswerToString(answer: any): string {
     }
   }
 
-  // Handle number values
   if (typeof answer === 'number') {
     return answer !== 0 ? 'True' : 'False';
   }
@@ -111,8 +100,7 @@ function normalizeAnswerToString(answer: any): string {
   throw new Error(`Invalid answer format: ${answer}`);
 }
 
-// Legacy parser for backward compatibility with old format
-export function parseLegacyTrueFalseResponse(response: string, config: QuestionConfig): TrueFalseQuestion[] {
+export function parseLegacyTrueFalseResponse(response: string, config: QuestionConfig): Question[] {
   try {
     const jsonContent = extractJsonFromResponse(response);
     const parsedData = JSON.parse(jsonContent);
@@ -122,12 +110,10 @@ export function parseLegacyTrueFalseResponse(response: string, config: QuestionC
     }
 
     return parsedData.map((item, index) => {
-      // Handle old format: question instead of statement, isTrue instead of answer
       if (item.question && item.isTrue !== undefined) {
         return createLegacyTrueFalseQuestion(item, config, index);
       }
       
-      // Handle new format
       return createTrueFalseQuestion(item, config, index);
     });
   } catch (error) {
@@ -136,7 +122,7 @@ export function parseLegacyTrueFalseResponse(response: string, config: QuestionC
   }
 }
 
-function createLegacyTrueFalseQuestion(item: any, config: QuestionConfig, index: number): TrueFalseQuestion {
+function createLegacyTrueFalseQuestion(item: any, config: QuestionConfig, index: number): Question {
   if (!item.question && !item.statement) {
     throw new Error(`Statement ${index + 1} missing required field 'question' or 'statement'`);
   }
@@ -151,16 +137,14 @@ function createLegacyTrueFalseQuestion(item: any, config: QuestionConfig, index:
   return {
     type: QuestionType.TRUE_FALSE,
     difficulty: config.difficulty,
-    language: config.language.toString(),
+    language: config.language,
     question: String(item.question || item.statement).trim(),
     answer: answer,
     explanation: item.explanation ? String(item.explanation).trim() : undefined,
-    contentReference: item.contentReference ? String(item.contentReference).trim() : undefined
   };
 }
 
-// Alternative parser for different response formats
-export function parseFlexibleTrueFalseResponse(response: string, config: QuestionConfig): TrueFalseQuestion[] {
+export function parseFlexibleTrueFalseResponse(response: string, config: QuestionConfig): Question[] {
   try {
     const jsonContent = extractJsonFromResponse(response);
     const parsedData = JSON.parse(jsonContent);
@@ -170,7 +154,6 @@ export function parseFlexibleTrueFalseResponse(response: string, config: Questio
     }
 
     return parsedData.map((item, index) => {
-      // Try different field name variations
       const statement = item.statement || item.question || item.text;
       const answer = item.answer !== undefined ? item.answer : 
                     item.isTrue !== undefined ? item.isTrue :
@@ -200,14 +183,13 @@ export function parseFlexibleTrueFalseResponse(response: string, config: Questio
   }
 }
 
-// Utility function to validate parsed True/False questions
 export function validateTrueFalseQuestions(questions: Question[]): void {
   questions.forEach((question, index) => {
     if (question.type !== QuestionType.TRUE_FALSE) {
       throw new Error(`Question ${index + 1}: Expected True/False type`);
     }
 
-    const tfQuestion = question as TrueFalseQuestion;
+    const tfQuestion = question as Question;
 
     if (!tfQuestion.question || tfQuestion.question.trim().length === 0) {
       throw new Error(`Question ${index + 1}: Question cannot be empty`);
@@ -229,8 +211,7 @@ export function validateTrueFalseQuestions(questions: Question[]): void {
   });
 }
 
-// Utility to check answer distribution
-export function analyzeAnswerDistribution(questions: TrueFalseQuestion[]): {
+export function analyzeAnswerDistribution(questions: Question[]): {
   totalQuestions: number;
   trueCount: number;
   falseCount: number;
@@ -245,7 +226,6 @@ export function analyzeAnswerDistribution(questions: TrueFalseQuestion[]): {
   const truePercentage = totalQuestions > 0 ? (trueCount / totalQuestions) * 100 : 0;
   const falsePercentage = totalQuestions > 0 ? (falseCount / totalQuestions) * 100 : 0;
   
-  // Consider balanced if neither true nor false exceeds 70%
   const isBalanced = Math.abs(truePercentage - falsePercentage) <= 40;
 
   return {
@@ -258,8 +238,7 @@ export function analyzeAnswerDistribution(questions: TrueFalseQuestion[]): {
   };
 }
 
-// Utility to format True/False questions for display
-export function formatTrueFalseForDisplay(question: TrueFalseQuestion): {
+export function formatTrueFalseForDisplay(question: Question): {
   question: string;
   answerText: string;
   hasExplanation: boolean;
@@ -271,5 +250,4 @@ export function formatTrueFalseForDisplay(question: TrueFalseQuestion): {
   };
 }
 
-// Export main parser function
 export { parseTrueFalseResponse as parseResponse };

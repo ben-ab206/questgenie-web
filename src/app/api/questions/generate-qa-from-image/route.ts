@@ -5,45 +5,82 @@ import { ValidationError } from '@/app/api/validation';
 import { calculateProcessingTime } from '@/lib/utils';
 import { createClient } from '../../supabase/server';
 import { getUser } from '../../auth';
-import mammoth from 'mammoth';
+import { createWorker } from 'tesseract.js';
 
-export const runtime = 'nodejs';
-export async function extractTextFromFile(file: File): Promise<string> {
+export async function extractTextFromImage(file: File): Promise<string> {
   const fileType = file.type;
   const fileName = file.name.toLowerCase();
 
-  if (fileType === 'text/plain' || fileName.endsWith('.txt')) {
-    return await file.text();
+  // Verify it's an image file
+  if (!isImageFile(fileType, fileName)) {
+    throw new Error(`File is not a supported image type: ${fileType}`);
   }
 
-  if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
-    const arrayBuffer = await file.arrayBuffer();
+  console.info('Processing image file with OCR...');
+  const arrayBuffer = await file.arrayBuffer();
+  
+  let worker;
+  try {
+    console.info('Creating Tesseract worker...');
+    // Using v5 syntax: createWorker with options object
+    worker = await createWorker({
+      logger: m => console.info('OCR Progress:', m)
+    });
+    
+    console.info('Starting OCR processing...');
+    // Convert ArrayBuffer to Buffer for Node.js environment
     const buffer = Buffer.from(arrayBuffer);
-
-    const pdfParse = (await import('pdf-parse')).default;
-
-    const data = await pdfParse(buffer);
-    return data.text;
+    const { data: { text } } = await worker.recognize(buffer);
+    
+    console.info('OCR completed, extracted text length:', text.length);
+    return text.trim();
+  } catch (error) {
+    console.error('OCR processing failed:', error);
+    throw new Error(`OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  } finally {
+    if (worker) {
+      console.info('Terminating Tesseract worker...');
+      await worker.terminate();
+    }
   }
-
-  if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || fileName.endsWith('.docx')) {
-    const arrayBuffer = await file.arrayBuffer();
-    const result = await mammoth.extractRawText({ arrayBuffer });
-    return result.value;
-  }
-
-  throw new Error(`Unsupported file type: ${fileType}`);
 }
 
+function isImageFile(fileType: string, fileName: string): boolean {
+  const imageTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/bmp',
+    'image/webp',
+    'image/tiff',
+    'image/tif'
+  ];
+
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff', '.tif'];
+  
+  return imageTypes.includes(fileType) || 
+         imageExtensions.some(ext => fileName.endsWith(ext));
+}
 
 function validateFileType(file: File): boolean {
   const allowedTypes = [
-    'text/plain',
-    'application/pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    // Image files only
+    'image/jpeg',
+    'image/jpg', 
+    'image/png',
+    'image/gif',
+    'image/bmp',
+    'image/webp',
+    'image/tiff',
+    'image/tif'
   ];
 
-  const allowedExtensions = ['.txt', '.pdf', '.docx'];
+  const allowedExtensions = [
+    // Image extensions only
+    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff', '.tif'
+  ];
+  
   const fileName = file.name.toLowerCase();
 
   return allowedTypes.includes(file.type) ||
@@ -107,7 +144,7 @@ export async function POST(request: NextRequest) {
 
         if (!validateFileType(file)) {
           throw new ValidationError(
-            'Invalid file type. Only TXT, PDF, and DOCX files are supported.',
+            'Invalid file type. Only image files (JPG, PNG, GIF, BMP, WebP, TIFF) are supported.',
             'file'
           );
         }
@@ -120,12 +157,12 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        console.info('✅ File validation passed, extracting text...');
-        content = await extractTextFromFile(file);
-        console.info('✅ Text extracted successfully, length:', content.length);
+        console.info('✅ File validation passed, extracting text from image...');
+        content = await extractTextFromImage(file);
+        console.info('✅ Text extracted successfully from image, length:', content.length);
 
         if (!content || content.trim().length === 0) {
-          throw new ValidationError('No readable content found in the file', 'file');
+          throw new ValidationError('No readable text found in the image', 'file');
         }
 
         const quantityStr = formData.get('quantity')?.toString();
@@ -223,7 +260,7 @@ export async function POST(request: NextRequest) {
         source,
         metadata: {
           originalContentLength: content.length,
-          processingMethod: contentType.includes('multipart/form-data') ? 'file_upload' : 'text_input'
+          processingMethod: contentType.includes('multipart/form-data') ? 'image_ocr' : 'text_input'
         }
       })
       .select()
@@ -286,7 +323,7 @@ export async function POST(request: NextRequest) {
           }))
         );
       dbError = error;
-    } {
+    } else {
       const { error } = await supabase
         .from('questions_bank')
         .insert(
@@ -299,7 +336,7 @@ export async function POST(request: NextRequest) {
               difficulty,
               language,
               topic,
-              contentSource: contentType.includes('multipart/form-data') ? 'file' : 'text'
+              contentSource: contentType.includes('multipart/form-data') ? 'image' : 'text'
             }
           }))
         );
@@ -322,7 +359,7 @@ export async function POST(request: NextRequest) {
         saved: !dbError,
         subject_id: subject.id,
         contentLength: content.length,
-        processingMethod: contentType.includes('multipart/form-data') ? 'file_upload' : 'text_input'
+        processingMethod: contentType.includes('multipart/form-data') ? 'image_ocr' : 'text_input'
       },
       processingTime
     );

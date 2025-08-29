@@ -16,22 +16,19 @@ export interface MCQOption {
 }
 
 export interface Question {
-  id: string;
+  id?: number;
   type: QuestionType;
   difficulty: DifficultyLevel;
   language: Language;
   question: string;
   answer: string;
   options?: string[];
-  correctOptionIndex?: number;
-  topic?: string;
-  contentSource: string;
-  createdAt: Date;
+  explanation?: string
 }
 
 export interface GenerationResult {
   success: boolean;
-  questions: Question[] | MCQQuestion[] | TrueFalseQuestion[];
+  questions: Question[];
   error?: string;
   contentHash?: string;
   metadata: GenerationMetadata;
@@ -72,7 +69,7 @@ export enum QuestionType {
   TRUE_FALSE = 'true_false',
   FILL_IN_THE_BLANK = 'fill_in_the_blank',
   SHORT_ANSWER = 'short_answer',
-  //   ESSAY = 'essay',
+  LONG_ANSWER = 'long_answer',
   //   MATCHING = 'matching',
   //   ORDERING = 'ordering'
 }
@@ -108,20 +105,6 @@ export interface MCQConfig {
   focusOnKeyPoints?: boolean;
 }
 
-export interface MCQQuestion {
-  id?: number,
-  type: string,
-  difficulty: string,
-  language: string,
-  question: string,
-  answer: string,
-  options: MCQOption[],
-  correctOptionIndex: number,
-  topic?: string,
-  contentSource: string,
-  explanation?: string,
-  contentReference?: string
-}
 
 export interface MCQResponse {
   question: string;
@@ -173,15 +156,28 @@ export interface TrueFalseResponse {
   correction?: string;
 }
 
-export interface TrueFalseQuestion {
-  id?: string,
-  type: QuestionType.TRUE_FALSE;
+export interface ShortAnswerConfig {
+  language: Language;
+  difficulty: DifficultyLevel;
+  quantity: number;
+  content: string;
+  answerLength?: 'brief' | 'moderate' | 'detailed';
+}
+export interface ShortAnswerResponse {
   question: string;
   answer: string;
-  language: string;
+}
+
+export interface LongAnswerConfig {
+  language: Language;
   difficulty: DifficultyLevel;
+  quantity: number;
+  content: string;
+  answerLength?: 'standard' | 'extended' | 'comprehensive';
+}
+
+export interface LongAnswerResponse {
+  question: string;
+  answer: string;
   explanation?: string;
-  contentReference?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  options?: any[],
 }

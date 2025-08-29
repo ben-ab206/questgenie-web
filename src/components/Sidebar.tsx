@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils"
-import { Brain, Home, Plus, List, LogOut, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {  Home, Plus, List, LogOut, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 interface SidebarProps {
   onClose?: () => void;
@@ -64,8 +65,8 @@ export default function Sidebar({
             "flex items-center transition-all duration-300",
             isCollapsed ? "justify-center w-full" : "space-x-3"
           )}>
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Brain className="w-4 h-4 text-white" />
+            <div>
+              <Image src={"/icons/quest-genie-icon.png"} height={30} width={30} alt="logo"/>
             </div>
             {!isCollapsed && (
               <span className="font-poppins font-bold text-xl text-textDark">QuestGenie</span>
@@ -126,16 +127,12 @@ export default function Sidebar({
                 "flex items-center w-full rounded-lg font-medium transition-all duration-300 relative",
                 isCollapsed ? "px-3 py-3 justify-center" : "px-4 py-3 space-x-3",
                 isActiveRoute(href)
-                  ? "bg-primary/10 text-primary shadow-sm border border-primary/20" 
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
+                  ? "bg-primary/10" 
+                  : "text-gray-600 hover:bg-primary/10 hover:text-gray-800"
               )}
               data-testid={testId}
               title={isCollapsed ? label : undefined}
             >
-              {/* Active indicator bar */}
-              {isActiveRoute(href) && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
-              )}
               <Icon className={cn(
                 "w-5 h-5 flex-shrink-0 transition-colors duration-200",
                 isActiveRoute(href) ? "text-primary" : ""

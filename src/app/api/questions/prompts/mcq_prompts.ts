@@ -3,14 +3,12 @@ import { QuestionConfig, Language, DifficultyLevel, MCQConfig } from "@/types/qu
 export function buildMCQPrompt(config: MCQConfig): string {
   const languageInstruction = getMCQLanguageInstruction(config.language);
   const difficultyInstruction = getMCQDifficultyInstruction(config.difficulty);
-  const topicInstruction = getMCQTopicInstruction(config.topic);
   const optionsInstruction = getMCQOptionsInstruction(config.optionsCount || 4);
   const qualityInstructions = getMCQQualityInstructions(config);
 
   return `${languageInstruction}
 
 TASK: Generate Multiple Choice Questions (MCQ)
-${topicInstruction}
 ${difficultyInstruction}
 ${optionsInstruction}
 
@@ -78,12 +76,6 @@ function getMCQDifficultyInstruction(difficulty: DifficultyLevel): string {
   };
 
   return instructions[difficulty];
-}
-
-function getMCQTopicInstruction(topic?: string): string {
-  return topic 
-    ? `TOPIC FOCUS: Concentrate specifically on "${topic}" within the provided content.`
-    : 'TOPIC FOCUS: Identify and focus on the most important concepts and information in the content.';
 }
 
 function getMCQOptionsInstruction(optionsCount: 4 | 5): string {

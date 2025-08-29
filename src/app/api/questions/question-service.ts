@@ -3,13 +3,8 @@ import {
   QuestionType,
   DifficultyLevel,
   Language,
-  // BatchGenerationRequest,
   APIResponse,
-  MCQQuestion,
-  TrueFalseQuestion,
-  // MCQQuestion
-} from '../../../types/questions';
-// import { shuffleArray } from '../utils';
+} from '@/types/questions';
 import { QuestionGenerator } from './question-generator';
 
 export class QuestionService {
@@ -19,31 +14,6 @@ export class QuestionService {
     this.generator = new QuestionGenerator(apiKey, model);
   }
 
-  // async generateMixedQuestions(
-  //   content: string,
-  //   quantity: number = 10,
-  //   difficulty: DifficultyLevel = DifficultyLevel.MEDIUM,
-  //   language: Language = Language.ENGLISH,
-  //   topic?: string
-  // ): Promise<Question[] | MCQQuestion[]> {
-  //   const distribution = this.calculateQuestionDistribution(quantity);
-  //   const configs = distribution.map(({ type, count }) => ({
-  //     type,
-  //     quantity: count,
-  //     difficulty,
-  //     language,
-  //     content,
-  //     topic
-  //   }));
-
-  //   const results = await this.generator.generateBatch(configs);
-  //   const allQuestions = results
-  //     .filter(result => result.success)
-  //     .flatMap(result => result.questions);
-
-  //   return shuffleArray(allQuestions).slice(0, quantity);
-  // }
-
   async generateSpecificType(
     content: string,
     type: QuestionType,
@@ -51,7 +21,7 @@ export class QuestionService {
     difficulty: DifficultyLevel = DifficultyLevel.MEDIUM,
     language: Language = Language.ENGLISH,
     topic?: string
-  ): Promise<Question[] | MCQQuestion[]  | TrueFalseQuestion[]> {
+  ): Promise<Question[]> {
     const result = type === QuestionType.MULTIPLE_CHOICE ? await this.generator.generateMCQQuestions({
       type,
       quantity,
@@ -67,7 +37,25 @@ export class QuestionService {
       content,
       topic
     })
-      : await this.generator.generateQuestions({
+      : type === QuestionType.FILL_IN_THE_BLANK ? await this.generator.generateFillInTheBlankQuestions({
+        type,
+        quantity,
+        difficulty,
+        language,
+        content
+      }) : type === QuestionType.SHORT_ANSWER ? await this.generator.generateShortAnswerQuestions({
+        type,
+        quantity,
+        difficulty,
+        language,
+        content
+      }) : type === QuestionType.LONG_ANSWER ? await this.generator.generateLongAnswerQuestions({
+        type,
+        quantity,
+        difficulty,
+        language,
+        content
+      }) : await this.generator.generateQuestions({
         type,
         quantity,
         difficulty,
@@ -82,34 +70,6 @@ export class QuestionService {
 
     return result.questions;
   }
-
-  // async processBatchRequest(request: BatchGenerationRequest): Promise<Question[]> {
-  //   const allQuestions: Question[] = [];
-
-  //   for (const contentInput of request.contents) {
-  //     const config = {
-  //       ...request.globalConfig,
-  //       content: contentInput.text,
-  //       topic: contentInput.topic || request.globalConfig.topic,
-  //       quantity: contentInput.quantity || 5,
-  //       difficulty: contentInput.difficulty || request.globalConfig.difficulty || DifficultyLevel.MEDIUM,
-  //       type: contentInput.type || request.globalConfig.type || QuestionType.MULTIPLE_CHOICE,
-  //       language: request.globalConfig.language || Language.ENGLISH
-  //     };
-
-  //     const questions = await this.generateMixedQuestions(
-  //       config.content,
-  //       config.quantity,
-  //       config.difficulty,
-  //       config.language,
-  //       config.topic
-  //     );
-
-  //     allQuestions.push(...questions);
-  //   }
-
-  //   return allQuestions;
-  // }
 
   formatAPIResponse<T>(
     data: T,
@@ -137,18 +97,5 @@ export class QuestionService {
         processingTime
       }
     };
-  }
-
-  private calculateQuestionDistribution(total: number): Array<{ type: QuestionType; count: number }> {
-    const baseDistribution = [
-      { type: QuestionType.MULTIPLE_CHOICE, percentage: 0.4 },
-      { type: QuestionType.SHORT_ANSWER, percentage: 0.3 },
-      { type: QuestionType.TRUE_FALSE, percentage: 0.3 }
-    ];
-
-    return baseDistribution.map(item => ({
-      type: item.type,
-      count: Math.max(1, Math.ceil(total * item.percentage))
-    }));
   }
 }

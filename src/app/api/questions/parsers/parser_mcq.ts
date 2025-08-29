@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MCQQuestion, MCQResponse, Question, QuestionConfig, QuestionType } from '@/types/questions';
-import { truncateContent } from '../../../lib/utils';
+import { MCQResponse, Question, QuestionConfig, QuestionType } from '@/types/questions';
 
-export function parseMCQResponse(response: string, config: QuestionConfig): MCQQuestion[] {
+export function parseMCQResponse(response: string, config: QuestionConfig): Question[] {
   try {
     const jsonContent = extractJsonFromResponse(response);
     const parsedData = JSON.parse(jsonContent);
@@ -11,7 +10,7 @@ export function parseMCQResponse(response: string, config: QuestionConfig): MCQQ
       throw new Error('Response must be a JSON array');
     }
 
-    return parsedData.map((item, index) => createMCQQuestion(item, config, index));
+    return parsedData.map((item, index) => createQuestion(item, config, index));
   } catch (error) {
     console.error('MCQ Parse error:', error);
     console.error('Raw response preview:', response.substring(0, 500));
@@ -35,7 +34,7 @@ function extractJsonFromResponse(response: string): string {
   return jsonMatch[0];
 }
 
-function createMCQQuestion(item: any, config: QuestionConfig, index: number): MCQQuestion {
+function createQuestion(item: any, config: QuestionConfig, index: number): Question {
   try {
     validateMCQItem(item, index);
     
@@ -49,11 +48,6 @@ function createMCQQuestion(item: any, config: QuestionConfig, index: number): MC
       question: String(item.question).trim(),
       answer: optionsArray[correctIndex],
       options: item.options,
-      correctOptionIndex: correctIndex,
-      topic: config.topic,
-      contentSource: truncateContent(config.content, 100),
-      explanation: item.explanation ? String(item.explanation).trim() : undefined,
-      contentReference: item.contentReference ? String(item.contentReference).trim() : undefined
     };
   } catch (error) {
     throw new Error(`Question ${index + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -117,7 +111,7 @@ function getCorrectOptionIndex(correctAnswer: string, options: MCQResponse['opti
 
 
 // Legacy parser for backward compatibility with old format
-export function parseLegacyMCQResponse(response: string, config: QuestionConfig): MCQQuestion[] {
+export function parseLegacyMCQResponse(response: string, config: QuestionConfig): Question[] {
   try {
     const jsonContent = extractJsonFromResponse(response);
     const parsedData = JSON.parse(jsonContent);
@@ -133,7 +127,7 @@ export function parseLegacyMCQResponse(response: string, config: QuestionConfig)
       }
       
       // Handle new format
-      return createMCQQuestion(item, config, index);
+      return createQuestion(item, config, index);
     });
   } catch (error) {
     console.error('Legacy MCQ Parse error:', error);
@@ -141,7 +135,7 @@ export function parseLegacyMCQResponse(response: string, config: QuestionConfig)
   }
 }
 
-function createLegacyMCQQuestion(item: any, config: QuestionConfig, index: number): MCQQuestion {
+function createLegacyMCQQuestion(item: any, config: QuestionConfig, index: number): Question {
   if (!item.question || !item.answer) {
     throw new Error(`Question ${index + 1} missing required fields (question, answer)`);
   }
@@ -162,10 +156,7 @@ function createLegacyMCQQuestion(item: any, config: QuestionConfig, index: numbe
     language: config.language,
     question: String(item.question).trim(),
     answer: String(item.options[item.correctOptionIndex]).trim(),
-    options: item.options.map((opt: any) => String(opt).trim()),
-    correctOptionIndex: item.correctOptionIndex,
-    topic: config.topic,
-    contentSource: truncateContent(config.content, 100),
+    options: item.options.map((opt: any) => String(opt).trim())
   };
 }
 
@@ -178,16 +169,6 @@ export function validateMCQQuestions(questions: Question[]): void {
 
     if (!question.options || question.options.length < 2) {
       throw new Error(`Question ${index + 1}: MCQ must have at least 2 options`);
-    }
-
-    if (typeof question.correctOptionIndex !== 'number' ||
-        question.correctOptionIndex < 0 ||
-        question.correctOptionIndex >= question.options.length) {
-      throw new Error(`Question ${index + 1}: Invalid correctOptionIndex`);
-    }
-
-    if (question.answer !== question.options[question.correctOptionIndex]) {
-      throw new Error(`Question ${index + 1}: Answer doesn't match correct option`);
     }
   });
 }

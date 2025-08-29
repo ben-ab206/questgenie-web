@@ -38,16 +38,14 @@ export default function ClientMainLayout({
 
     return (
         <QueryClientProvider client={queryClient}>
-            <div className="flex min-h-screen bg-gray-50">
+            <div className="flex min-h-screen bg-primary/10">
                 <Sidebar 
                     userEmail={user?.email} 
                     userName={user?.name} 
                     onLogout={signOutAction} 
                 />
-                <main className="flex-1 p-8">
-                    <div className="max-w-4xl mx-auto">
-                        {children}
-                    </div>
+                <main className="flex-1">
+                    {children}
                 </main>
             </div>
             <ReactQueryDevtools initialIsOpen={false} />

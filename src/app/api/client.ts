@@ -129,6 +129,110 @@ export class APIClient {
     }
   }
 
+  async generateQuestionsFromImage(params: {
+    file: File;
+    quantity?: number;
+    difficulty?: DifficultyLevel;
+    language?: Language;
+    type?: QuestionType;
+    topic?: string;
+    source?: string
+  }): Promise<APIResponse<{
+    questions: Question[];
+    count: number;
+    saved: boolean;
+    subject_id?: string;
+    contentLength?: number;
+    processingMethod?: string;
+  }>> {
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/bmp',
+      'image/webp',
+      'image/tiff',
+      'image/tif'
+    ];
+
+    const allowedExtensions = [
+      '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff', '.tif'
+    ];
+
+    const fileName = params.file.name.toLowerCase();
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    const isValidType = allowedTypes.includes(params.file.type) ||
+      allowedExtensions.some(ext => fileName.endsWith(ext));
+
+    if (!isValidType) {
+      throw new Error('Invalid file type. Only TXT, PDF, and DOCX files are supported.');
+    }
+
+    if (params.file.size > maxSize) {
+      throw new Error('File size too large. Maximum allowed size is 10MB.');
+    }
+
+    if (params.file.size === 0) {
+      throw new Error('File is empty.');
+    }
+
+    const formData = new FormData();
+    formData.append('file', params.file);
+
+    if (params.quantity !== undefined) {
+      formData.append('quantity', params.quantity.toString());
+    }
+    if (params.difficulty) {
+      formData.append('difficulty', params.difficulty);
+    }
+    if (params.language) {
+      formData.append('language', params.language);
+    }
+    if (params.type) {
+      formData.append('type', params.type);
+    }
+    if (params.topic) {
+      formData.append('topic', params.topic);
+    }
+
+    if (params.source) {
+      formData.append('source', params.source);
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/questions/generate-qa-from-image`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error:', errorData);
+
+        if (response.status === 400) {
+          throw new Error(errorData.error || 'Invalid request data');
+        } else if (response.status === 401) {
+          throw new Error('Authentication required');
+        } else if (response.status === 413) {
+          throw new Error('File too large');
+        } else if (response.status === 415) {
+          throw new Error('Unsupported file type');
+        } else {
+          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        }
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to generate questions from file');
+    }
+  }
+
   async getQuestionHistory(params: {
     page?: number;
     limit?: number;

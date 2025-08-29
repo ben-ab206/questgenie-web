@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Question, QuestionConfig } from '../../../types/questions';
-import { truncateContent } from '../../../lib/utils';
+import { Question, QuestionConfig } from '@/types/questions';
+import { truncateContent } from '../../../../lib/utils';
 
 export function parseResponse(response: string, config: QuestionConfig): Question[] {
   try {
@@ -40,16 +40,11 @@ function createQuestion(item: any, config: QuestionConfig, index: number): Quest
   }
 
   return {
-    id: "88",
     type: config.type,
     difficulty: config.difficulty,
     language: config.language,
     question: String(item.question).trim(),
     answer: String(item.answer).trim(),
     options: item.options ? item.options.map((opt: any) => String(opt).trim()) : undefined,
-    correctOptionIndex: typeof item.correctOptionIndex === 'number' ? item.correctOptionIndex : undefined,
-    topic: config.topic,
-    contentSource: truncateContent(config.content, 100),
-    createdAt: new Date()
   };
 }

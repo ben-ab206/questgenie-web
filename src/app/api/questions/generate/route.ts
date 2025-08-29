@@ -1,142 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { QuestionService } from '@/app/api/questions/question-service';
-import { DifficultyLevel, Language, QuestionType } from '@/types/questions';
+import { DifficultyLevel, Language, Question, QuestionType } from '@/types/questions';
 import { ValidationError } from '@/app/api/validation';
 import { calculateProcessingTime } from '@/lib/utils';
 import { createClient } from '../../supabase/server';
 import { getUser } from '../../auth';
 
+interface RequestBody {
+  content: string;
+  quantity?: number;
+  difficulty?: DifficultyLevel;
+  language?: Language;
+  type: QuestionType;
+  topic?: string;
+  source?: string;
+  model?: string;
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+  let questionService: QuestionService;
 
   try {
-    const supabase = await createClient();
-    const user = await getUser();
-    
+    // Initialize services and validate user
+    const { user, supabase } = await initializeServices();
     if (!user) {
-      const processingTime = calculateProcessingTime(startTime);
-      return NextResponse.json({
-        success: false,
-        error: 'Authentication required',
-        metadata: {
-          timestamp: new Date().toISOString(),
-          processingTime
-        }
-      }, { status: 401 });
+      return createErrorResponse('Authentication required', 401, startTime);
     }
 
-    const body = await request.json();
-    const { 
-      content, 
-      quantity = 10, 
-      difficulty = DifficultyLevel.MEDIUM,
-      language = Language.ENGLISH,
-      type,
-      topic,
-      source,
-      model = 'openai/gpt-4'
-    } = body;
+    // Parse and validate request body
+    const body = await parseRequestBody(request);
+    validateRequestBody(body);
 
-    if (!content || typeof content !== 'string') {
-      throw new ValidationError('Content is required and must be a string', 'content');
-    }
+    // Initialize question service
+    questionService = createQuestionService(body.model);
 
-    if (!process.env.NEXT_PUBLIC_OPENROUTER_API_KEY) {
-      throw new Error('OpenRouter API key not configured');
-    }
-
-    const questionService = new QuestionService(process.env.NEXT_PUBLIC_OPENROUTER_API_KEY, model);
-
+    // Generate questions
     const questions = await questionService.generateSpecificType(
-        content,
-        type as QuestionType,
-        quantity,
-        difficulty,
-        language,
-        topic
-      );
+      body.content,
+      body.type,
+      body.quantity,
+      body.difficulty,
+      body.language,
+    );
 
-    // Insert subject and get the returned data
-    const { data: subject, error: subjectError } = await supabase
-      .from('subjects')
-      .insert({
-        user_id: user.id,
-        type: type,
-        content: content,
-        topic: topic,
-        source: source,
-        metadata: {
-          originalContentLength: content.length,
-        }
-      })
-      .select()
-      .single();
+    // Save to database
+    const subject = await createSubject(supabase, user.id, body);
+    await saveQuestions(supabase, questions, subject.id);
 
-    if (subjectError) {
-      throw new Error(`Subject creation failed: ${subjectError.message}`);
-    }
-
-    // Insert questions into database
-    let dbError = null;
-    
-    if (type === QuestionType.MULTIPLE_CHOICE) {
-      const { error } = await supabase
-        .from('questions_bank')
-        .insert(
-          questions.map(q => ({
-            subject_id: subject.id,
-            question_text: q.question,
-            answer_text: q.answer,
-            language: q.language,
-            difficulty: q.difficulty,
-            type: q.type,
-            options: q.options,
-          }))
-        );
-      dbError = error;
-    } if(type === QuestionType.TRUE_FALSE){
-      const { error } = await supabase
-        .from('questions_bank')
-        .insert(
-          questions.map(q => ({
-            subject_id: subject.id,
-            question_text: q.question,
-            answer_text: q.answer,
-            language: q.language,
-            difficulty: q.difficulty,
-            type: q.type,
-          }))
-        );
-      dbError = error;
-    } else {
-      const { error } = await supabase
-        .from('questions_bank')
-        .insert(
-          questions.map(q => ({
-            ...q,
-            subject_id: subject.id,
-            user_id: user.id,
-            metadata: {
-              model,
-              difficulty,
-              language,
-              topic
-            }
-          }))
-        );
-      dbError = error;
-    }
-
-    if (dbError) {
-      console.error('Database save error:', dbError);
-    }
-
+    // Return success response
     const processingTime = calculateProcessingTime(startTime);
     const response = questionService.formatAPIResponse(
-      { 
-        questions, 
+      {
+        questions,
         count: questions.length,
-        saved: !dbError,
+        saved: true,
         subject_id: subject.id
       },
       processingTime
@@ -145,22 +63,133 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error) {
-    const processingTime = calculateProcessingTime(startTime);
-    const questionService = new QuestionService(process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || '');
-    
-    if (error instanceof ValidationError) {
-      const response = questionService.formatErrorResponse(
-        error.message,
-        processingTime
-      );
-      return NextResponse.json(response, { status: 400 });
-    }
-
-    console.error('API Error:', error);
-    const response = questionService.formatErrorResponse(
-      error instanceof Error ? error.message : 'Internal server error',
-      processingTime
-    );
-    return NextResponse.json(response, { status: 500 });
+    return handleError(error, startTime);
   }
+}
+
+// Helper functions
+async function initializeServices() {
+  const supabase = await createClient();
+  const user = await getUser();
+  return { user, supabase };
+}
+
+async function parseRequestBody(request: NextRequest): Promise<RequestBody> {
+  const body = await request.json();
+  return {
+    content: body.content,
+    quantity: body.quantity ?? 10,
+    difficulty: body.difficulty ?? DifficultyLevel.MEDIUM,
+    language: body.language ?? Language.ENGLISH,
+    type: body.type,
+    topic: body.topic,
+    source: body.source,
+    model: body.model ?? 'openai/gpt-4'
+  };
+}
+
+function validateRequestBody(body: RequestBody): void {
+  if (!body.content || typeof body.content !== 'string') {
+    throw new ValidationError('Content is required and must be a string', 'content');
+  }
+
+  if (!body.type) {
+    throw new ValidationError('Question type is required', 'type');
+  }
+}
+
+function createQuestionService(model?: string): QuestionService {
+  const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+  if (!apiKey) {
+    throw new Error('OpenRouter API key not configured');
+  }
+  return new QuestionService(apiKey, model);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function createSubject(supabase: any, userId: number, body: RequestBody) {
+  const { data: subject, error } = await supabase
+    .from('subjects')
+    .insert({
+      user_id: userId,
+      type: body.type,
+      content: body.content,
+      topic: body.topic,
+      source: body.source,
+      metadata: {
+        originalContentLength: body.content.length,
+      }
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Subject creation failed: ${error.message}`);
+  }
+
+  return subject;
+}
+
+async function saveQuestions(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any, 
+  questions: Question[], 
+  subjectId: string, 
+): Promise<void> {
+  const questionData = questions.map(q => createQuestionData(q, subjectId));
+  
+  const { error } = await supabase
+    .from('questions_bank')
+    .insert(questionData);
+
+  if (error) {
+    console.error('Database save error:', error);
+    throw new Error(`Failed to save questions: ${error.message}`);
+  }
+}
+
+function createQuestionData(question: Question, subjectId: string) {
+  const baseData = {
+    subject_id: subjectId,
+    question_text: question.question,
+    answer_text: question.answer,
+    language: question.language,
+    difficulty: question.difficulty,
+    type: question.type,
+    explanation: question.explanation,
+  };
+
+  // Add options for multiple choice questions
+  if (question.type === QuestionType.MULTIPLE_CHOICE && question.options) {
+    return { ...baseData, options: question.options };
+  }
+
+  return baseData;
+}
+
+function createErrorResponse(message: string, status: number, startTime: number) {
+  const processingTime = calculateProcessingTime(startTime);
+  return NextResponse.json({
+    success: false,
+    error: message,
+    metadata: {
+      timestamp: new Date().toISOString(),
+      processingTime
+    }
+  }, { status });
+}
+
+function handleError(error: unknown, startTime: number, questionService?: QuestionService) {
+  const processingTime = calculateProcessingTime(startTime);
+  const service = questionService || new QuestionService('', '');
+
+  if (error instanceof ValidationError) {
+    const response = service.formatErrorResponse(error.message, processingTime);
+    return NextResponse.json(response, { status: 400 });
+  }
+
+  console.error('API Error:', error);
+  const message = error instanceof Error ? error.message : 'Internal server error';
+  const response = service.formatErrorResponse(message, processingTime);
+  return NextResponse.json(response, { status: 500 });
 }
