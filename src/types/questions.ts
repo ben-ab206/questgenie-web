@@ -22,8 +22,16 @@ export interface Question {
   language: Language;
   question: string;
   answer: string;
-  options?: string[];
-  explanation?: string
+  options?: string[]; // mcq
+  explanation?: string;
+  matching_questions?: {
+      A: string
+      B: string
+    }[],
+  matching_answers?: {
+    A: string
+    B: string
+  }[]
 }
 
 export interface GenerationResult {
@@ -70,7 +78,7 @@ export enum QuestionType {
   FILL_IN_THE_BLANK = 'fill_in_the_blank',
   SHORT_ANSWER = 'short_answer',
   LONG_ANSWER = 'long_answer',
-  //   MATCHING = 'matching',
+  MATCHING = 'matching',
   //   ORDERING = 'ordering'
 }
 
@@ -100,9 +108,6 @@ export interface MCQConfig {
   quantity: number;
   content: string;
   optionsCount?: 4 | 5;
-  includeExplanation?: boolean;
-  avoidAmbiguity?: boolean;
-  focusOnKeyPoints?: boolean;
 }
 
 
@@ -129,8 +134,8 @@ export interface FillInBlankConfig {
   includeExplanation?: boolean;
   avoidAmbiguity?: boolean;
   focusOnKeyPoints?: boolean;
-  blankType?: 'single' | 'multiple' | 'mixed'; 
-  provideChoices?: boolean; 
+  blankType?: 'single' | 'multiple' | 'mixed';
+  provideChoices?: boolean;
   choicesCount?: number;
   contextLength?: 'short' | 'medium' | 'long';
 }
@@ -179,5 +184,27 @@ export interface LongAnswerConfig {
 export interface LongAnswerResponse {
   question: string;
   answer: string;
+  explanation?: string;
+}
+
+export interface MatchingQuestionConfig {
+  language: Language;
+  difficulty: DifficultyLevel;
+  quantity: number;
+  content: string;
+  topic?: string;
+  matchingType?: 'definition' | 'concept' | 'cause-effect' | 'process' | 'classification' | 'general';
+}
+
+export interface MatchingQuestionResponse {
+  question: string;
+  matching_questions: {
+    A: string;
+    B: string;
+  }[];
+  matching_answers: {
+    A: string;
+    B: string;
+  }[];
   explanation?: string;
 }

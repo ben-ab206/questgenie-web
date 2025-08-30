@@ -357,6 +357,15 @@ const GeneratePage = () => {
                                     />
                                     <Label htmlFor="long-answer" className="text-sm">Long Answer</Label>
                                 </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id={QuestionType.MATCHING}
+                                        checked={questionTypes.includes(QuestionType.MATCHING)}
+                                        onCheckedChange={(checked) => handleQuestionTypeChange(QuestionType.MATCHING, !!checked)}
+                                        data-testid="question-type-matching"
+                                    />
+                                    <Label htmlFor="matching" className="text-sm">Matching</Label>
+                                </div>
                             </div>
                         </div>
 

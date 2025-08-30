@@ -14,6 +14,8 @@ import { buildShortAnswerPrompt } from './prompts/short_answer_prompts';
 import { parseShortAnswerResponse } from './parsers/parser_shortAnswer';
 import { buildLongAnswerPrompt } from './prompts/long_answer_prompts';
 import { parseLongAnswerResponse } from './parsers/parser_longAnswer';
+import { buildMatchingQuestionPrompt } from './prompts/matching_prompts';
+import { parseMatchingResponse } from './parsers/parser_matchings';
 export class QuestionGenerator {
   private openRouterClient: OpenRouterClient;
   private model: string;
@@ -217,6 +219,40 @@ export class QuestionGenerator {
       const prompt = buildLongAnswerPrompt(config);
       const response = await this.openRouterClient.generateResponse(prompt);
       const questions = parseLongAnswerResponse(response, config);
+
+      return {
+        success: true,
+        questions,
+        contentHash: generateContentHash(config.content),
+        metadata: {
+          generatedAt: new Date(),
+          model: this.model,
+          processingTimeMs: calculateProcessingTime(startTime)
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        questions: [],
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        metadata: {
+          generatedAt: new Date(),
+          model: this.model,
+          processingTimeMs: calculateProcessingTime(startTime)
+        }
+      };
+    }
+  }
+
+  async generateMatchingAnswerQuestions(config: QuestionConfig): Promise<GenerationResult> {
+    const startTime = Date.now();
+
+    try {
+      validateQuestionConfig(config);
+      
+      const prompt = buildMatchingQuestionPrompt(config);
+      const response = await this.openRouterClient.generateResponse(prompt);
+      const questions = parseMatchingResponse(response, config);
 
       return {
         success: true,

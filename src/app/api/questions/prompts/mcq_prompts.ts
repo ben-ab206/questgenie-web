@@ -20,7 +20,6 @@ MCQ SPECIFIC REQUIREMENTS:
 5. Do not use external knowledge beyond the given content
 6. Ensure all incorrect options (distractors) are plausible but clearly wrong
 7. Make questions test understanding, not just memorization
-${config.includeExplanation ? '8. Provide brief explanations for correct answers' : ''}
 
 ${qualityInstructions}
 
@@ -40,7 +39,6 @@ OUTPUT FORMAT (JSON array only, no additional text):
       "D": "Fourth option text"${config.optionsCount === 5 ? ',\n      "E": "Fifth option text"' : ''}
     },
     "correctAnswer": "A",
-    "contentReference": "Brief reference to content section used"${config.includeExplanation ? ',\n    "explanation": "Brief explanation of why this answer is correct"' : ''}
   }
 ]`;
 }
@@ -90,19 +88,16 @@ function getMCQOptionsInstruction(optionsCount: 4 | 5): string {
 function getMCQQualityInstructions(config: MCQConfig): string {
   let instructions = `QUALITY STANDARDS:`;
 
-  if (config.avoidAmbiguity !== false) {
     instructions += `
 - Ensure questions have only one clearly correct answer
 - Avoid trick questions or ambiguous wording
 - Make question stems clear and specific`;
-  }
 
-  if (config.focusOnKeyPoints !== false) {
     instructions += `
 - Prioritize testing the most important information
 - Focus on key concepts rather than trivial details
 - Ensure questions assess meaningful understanding`;
-  }
+
 
   instructions += `
 - Write concise but complete question stems
@@ -128,9 +123,6 @@ export function buildSimpleMCQPrompt(
     quantity,
     content,
     optionsCount: 4,
-    includeExplanation: false,
-    avoidAmbiguity: true,
-    focusOnKeyPoints: true
   };
 
   return buildMCQPrompt(config);
@@ -145,9 +137,6 @@ export function buildMCQFromQuestionConfig(config: QuestionConfig): string {
     quantity: config.quantity,
     content: config.content,
     optionsCount: 4,
-    includeExplanation: false,
-    avoidAmbiguity: true,
-    focusOnKeyPoints: true
   };
 
   return buildMCQPrompt(mcqConfig);

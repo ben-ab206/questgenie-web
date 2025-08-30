@@ -132,12 +132,12 @@ async function createSubject(supabase: any, userId: number, body: RequestBody) {
 
 async function saveQuestions(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: any, 
-  questions: Question[], 
-  subjectId: string, 
+  supabase: any,
+  questions: Question[],
+  subjectId: string,
 ): Promise<void> {
   const questionData = questions.map(q => createQuestionData(q, subjectId));
-  
+
   const { error } = await supabase
     .from('questions_bank')
     .insert(questionData);
@@ -157,6 +157,8 @@ function createQuestionData(question: Question, subjectId: string) {
     difficulty: question.difficulty,
     type: question.type,
     explanation: question.explanation,
+    matching_questions: question.matching_questions,
+    matching_answers: question.matching_answers
   };
 
   // Add options for multiple choice questions

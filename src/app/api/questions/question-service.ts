@@ -55,6 +55,12 @@ export class QuestionService {
         difficulty,
         language,
         content
+      }) : type === QuestionType.MATCHING ? await this.generator.generateMatchingAnswerQuestions({
+        type,
+        quantity,
+        difficulty,
+        language,
+        content
       }) : await this.generator.generateQuestions({
         type,
         quantity,
