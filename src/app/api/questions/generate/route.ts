@@ -160,7 +160,6 @@ function createQuestionData(question: Question, subjectId: string) {
     matching_answers: question.matching_answers
   };
 
-  // Add options for multiple choice questions
   if (question.type === QuestionType.MULTIPLE_CHOICE && question.options) {
     return { ...baseData, options: question.options };
   }
