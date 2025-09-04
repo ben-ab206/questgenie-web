@@ -3,7 +3,7 @@ import { QuestionService } from '@/app/api/questions/question-service';
 import { DifficultyLevel, Language, Question, QuestionType } from '@/types/questions';
 import { ValidationError } from '@/app/api/validation';
 import { calculateProcessingTime } from '@/lib/utils';
-import { createClient } from '../../supabase/server';
+import { createClient } from '../../../../lib/supabase/server';
 import { getUser } from '../../auth';
 
 interface RequestBody {
