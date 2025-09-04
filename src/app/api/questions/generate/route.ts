@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Helper functions
 async function initializeServices() {
   const supabase = await createClient();
   const user = await getUser();
