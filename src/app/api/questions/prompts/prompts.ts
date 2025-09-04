@@ -53,8 +53,8 @@ function getTypeInstruction(type: QuestionType): string {
     [QuestionType.TRUE_FALSE]: 'Create true/false questions based on factual statements from the content.',
     [QuestionType.FILL_IN_THE_BLANK]: 'Create fill-in-the-blank questions using key information. Use _____ for blanks.',
     [QuestionType.SHORT_ANSWER]: 'Create questions requiring 1-2 sentence answers based on the content.',
-    // [QuestionType.ESSAY]: 'Create essay questions requiring detailed analysis of content concepts.',
-    // [QuestionType.MATCHING]: 'Create matching questions with terms and definitions from the content.',
+    [QuestionType.LONG_ANSWER]: 'Create questions requiring 3-5 sentence answers based on the content.',
+    [QuestionType.MATCHING]: 'Create matching questions with terms and definitions from the content.',
     // [QuestionType.ORDERING]: 'Create sequencing questions based on processes or events in the content.'
   };
 
