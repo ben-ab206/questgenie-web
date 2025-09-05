@@ -27,7 +27,7 @@ export default function Sidebar({
   const router = useRouter();
 
   const navItems = [
-    { href: "/", icon: Home, label: "Dashboard", testId: "nav-dashboard" },
+    { href: "/dashboard", icon: Home, label: "Dashboard", testId: "nav-dashboard" },
     { href: "/generate", icon: Plus, label: "Generate Questions", testId: "nav-create" },
   ];
 
@@ -123,7 +123,7 @@ export default function Sidebar({
               key={href}
               onClick={() => handleNavClick(href)}
               className={cn(
-                "flex items-center w-full rounded-lg font-medium transition-all duration-300 relative",
+                "flex items-center w-full rounded-lg transition-all duration-300 relative",
                 isCollapsed ? "px-3 py-3 justify-center" : "px-4 py-3 space-x-3",
                 isActiveRoute(href)
                   ? "bg-primary/10" 

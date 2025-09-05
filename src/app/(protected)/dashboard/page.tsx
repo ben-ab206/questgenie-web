@@ -1,21 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-
 export default async function Dashboard() {
-  const supabase = await createClient()
-
-  const { data: { user }, error } = await supabase.auth.getUser()
-
-  if (error || !user) {
-    redirect('/login')
-  }
-
-  // Fetch additional data
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('user_id', user.id)
-    .single()
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -24,7 +7,7 @@ export default async function Dashboard() {
           Dashboard
         </h1>
         
-        <div className="bg-white shadow rounded-lg p-6 mb-8">
+        {/* <div className="bg-white shadow rounded-lg p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Welcome back!</h2>
           <p className="text-gray-600">Email: {user.email}</p>
           <p className="text-gray-600">ID: {user.id}</p>
@@ -48,7 +31,7 @@ export default async function Dashboard() {
             <h3 className="text-lg font-medium mb-2">Users</h3>
             <p className="text-3xl font-bold text-purple-600">1,234</p>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   )
