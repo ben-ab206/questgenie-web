@@ -9,11 +9,12 @@ export default async function LoginLayout({
     const supabase = await createClient()
 
     const {
-        data: { user },
-        error,
+        data: { user }
     } = await supabase.auth.getUser()
 
-    if (error || user) {
+    console.log(user)
+
+    if (user) {
         redirect("/dashboard")
     }
     return (
