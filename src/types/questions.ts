@@ -1,3 +1,5 @@
+import { Subjects } from "./subjects";
+
 export interface QuestionConfig {
   type: QuestionType;
   quantity: number;
@@ -25,9 +27,9 @@ export interface Question {
   options?: string[]; // mcq
   explanation?: string;
   matching_questions?: {
-      A: string
-      B: string
-    }[],
+    A: string
+    B: string
+  }[],
   matching_answers?: {
     A: string
     B: string
@@ -207,4 +209,32 @@ export interface MatchingQuestionResponse {
     B: string;
   }[];
   explanation?: string;
+}
+export interface QuestionBank {
+  id: number;
+  subject_id: number;
+  question_text: string;
+  answer_text: string;
+  updated_at: string;
+  created_at: string;
+  difficulty: string;
+  language: string;
+  type: string;
+  options?: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+    E?: string;
+  },
+  explanation?: string;
+  matching_questions?: {
+    A: string;
+    B: string;
+  }[],
+  matching_answers?: {
+    A: string;
+    B: string;
+  }[];
+  subjects?: Subjects
 }

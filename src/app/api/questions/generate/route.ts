@@ -14,6 +14,8 @@ interface RequestBody {
   topic?: string;
   source?: string;
   model?: string;
+  title: string;
+  description?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -81,7 +83,9 @@ async function parseRequestBody(request: NextRequest): Promise<RequestBody> {
     type: body.type,
     topic: body.topic,
     source: body.source,
-    model: body.model ?? 'openai/gpt-4'
+    model: body.model ?? 'openai/gpt-4',
+    title: body.title,
+    description: body.description,
   };
 }
 
@@ -92,6 +96,10 @@ function validateRequestBody(body: RequestBody): void {
 
   if (!body.type) {
     throw new ValidationError('Question type is required', 'type');
+  }
+
+  if (!body.title) {
+    throw new ValidationError('Question title is required', 'title');
   }
 }
 
@@ -109,6 +117,8 @@ async function createSubject(supabase: any, userId: number, body: RequestBody) {
     .from('subjects')
     .insert({
       user_id: userId,
+      title: body.title,
+      description: body.description,
       type: body.type,
       content: body.content,
       topic: body.topic,

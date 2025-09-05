@@ -54,7 +54,7 @@ export class OpenRouterClient {
       'Authorization': `Bearer ${this.config.apiKey}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': process.env.NEXTAUTH_URL || 'http://localhost:3000',
-      'X-Title': 'Next.js Question Generator'
+      'X-Title': 'Question Generator'
     };
 
     const payload = {

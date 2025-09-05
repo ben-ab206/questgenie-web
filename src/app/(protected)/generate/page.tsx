@@ -32,22 +32,10 @@ const initWorker = async () => {
 };
 
 const GeneratePage = () => {
-
-    const { mutateAsync: generateQA, isPending } = useMutation({
-        mutationFn: () => generateQuestions({
-            content: content,
-            difficulty: difficulty,
-            quantity: questionCount,
-            type: questionTypes[0],
-            source: sourceType,
-        }),
-        onSuccess: (data) => {
-            console.info(data)
-        }
-    })
-
     const [uploadFile, setUploadFile] = useState<File | undefined>(undefined);
     const [content, setContent] = useState("");
+    const [ title, setTitle ] = useState("");
+    const [description, setDescription] = useState("");
     const [isExtracting, setIsExtracting] = useState(false);
     const [sourceType, setSourceType] = useState<"text" | "file" | "youtube" | "image">("text");
     const [youtubeUrl, setYoutubeUrl] = useState("");
@@ -56,6 +44,21 @@ const GeneratePage = () => {
     const [difficulty, setDifficulty] = useState(DifficultyLevel.MEDIUM);
     const [questionCount, setQuestionCount] = useState(10);
     const [language, setLanguage] = useState<string>("english");
+
+    const { mutateAsync: generateQA, isPending } = useMutation({
+        mutationFn: () => generateQuestions({
+            content: content,
+            difficulty: difficulty,
+            quantity: questionCount,
+            type: questionTypes[0],
+            source: sourceType,
+            title: title,
+            description: description,
+        }),
+        onSuccess: (data) => {
+            console.info(data)
+        }
+    })
 
     const adjustQuestionCount = (delta: number) => {
         const newCount = Math.max(1, Math.min(50, questionCount + delta));
@@ -129,6 +132,24 @@ const GeneratePage = () => {
     return <div>
         <HeaderGenerate />
         <div className="p-4">
+            <Card className="mb-8 bg-white">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-3">
+                        Question Set Details
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div>
+                        <Label>Question Set Title</Label>
+                        <Input placeholder="Title" value={title} onChange={(e)=> setTitle(e.target.value)} />
+                    </div>
+                    <div>
+                        <Label>Question Set Description</Label>
+                        <Textarea placeholder="Description" value={description} onChange={(e)=> setDescription(e.target.value)} />
+                    </div>
+                </CardContent>
+            </Card>
+
             <Card className="mb-8 bg-white">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3">

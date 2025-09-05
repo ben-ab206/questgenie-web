@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils"
-import {  Home, Plus, LogOut, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {  Home, Plus, LogOut, X, ChevronLeft, ChevronRight, Book } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
@@ -29,6 +29,7 @@ export default function Sidebar({
   const navItems = [
     { href: "/dashboard", icon: Home, label: "Dashboard", testId: "nav-dashboard" },
     { href: "/generate", icon: Plus, label: "Generate Questions", testId: "nav-create" },
+    { href: "/question-banks", icon: Book, label: "Question Banks", testId: "question-banks" }
   ];
 
   const handleNavClick = (href: string) => {
