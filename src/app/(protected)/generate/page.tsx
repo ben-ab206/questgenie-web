@@ -92,6 +92,25 @@ const GeneratePage = () => {
         console.error(error)
     };
 
+    const handleYouTubeProcess = async () => {
+        try {
+        const res = await fetch("/api/transcript", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: youtubeUrl }),
+        });
+
+        console.log(res)
+
+        if (!res.ok) throw new Error("Failed to fetch transcript");
+
+        const data = await res.json();
+        setContent(data.data);
+        } catch (err) {
+        console.error(err);
+        }
+    };
+
 
     const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -225,7 +244,7 @@ const GeneratePage = () => {
                                         data-testid="youtube-url-input"
                                     />
                                     <Button
-                                        // onClick={handleYouTubeProcess}
+                                        onClick={handleYouTubeProcess}
                                         // disabled={!youtubeUrl.trim() || isProcessing}
                                         variant="outline"
                                         data-testid="process-youtube-button"
