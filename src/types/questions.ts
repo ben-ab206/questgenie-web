@@ -24,7 +24,7 @@ export interface Question {
   language: Language;
   question: string;
   answer: string;
-  options?: string[]; // mcq
+  options?: MCQOption; // mcq
   explanation?: string;
   matching_questions?: {
     A: string
