@@ -4,7 +4,8 @@ import {
     Question, 
     QuestionType, 
     APIResponse, 
-    QuestionBank
+    QuestionBank,
+    BloomLevel
 } from "@/types/questions";
 
 type GenerateQuestionsParams = {
@@ -12,6 +13,7 @@ type GenerateQuestionsParams = {
     description?: string;
     content: string;
     quantity?: number;
+    bloom_level?: BloomLevel;
     difficulty?: DifficultyLevel;
     language?: Language;
     type?: QuestionType;

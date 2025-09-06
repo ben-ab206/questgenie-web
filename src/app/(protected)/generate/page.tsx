@@ -1,6 +1,6 @@
 "use client"
 
-import { DifficultyLevel, Question, QuestionType } from "@/types/questions"
+import { BloomLevel, DifficultyLevel, Question, QuestionType } from "@/types/questions"
 import { useMutation } from "@tanstack/react-query"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sparkles, Youtube, Image, FileText, Upload, Minus, Plus, Loader2Icon } from "lucide-react";
@@ -69,6 +69,7 @@ const GeneratePage = () => {
         mutationFn: () => generateQuestions({
             content: content,
             difficulty: difficulty,
+            bloom_level: bloom as BloomLevel,
             quantity: questionCount,
             type: questionTypes[0],
             source: sourceType,

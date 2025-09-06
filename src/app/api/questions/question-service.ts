@@ -4,6 +4,7 @@ import {
   DifficultyLevel,
   Language,
   APIResponse,
+  BloomLevel,
 } from '@/types/questions';
 import { QuestionGenerator } from './question-generator';
 
@@ -18,6 +19,7 @@ export class QuestionService {
     content: string,
     type: QuestionType,
     quantity: number = 5,
+    bloom_level: BloomLevel = BloomLevel.MIXED,
     difficulty: DifficultyLevel = DifficultyLevel.MEDIUM,
     language: Language = Language.ENGLISH,
     topic?: string
@@ -27,6 +29,7 @@ export class QuestionService {
       quantity,
       difficulty,
       language,
+      bloom_level,
       content,
       topic
     }) : type === QuestionType.TRUE_FALSE ? await this.generator.generateTrueFalseQuestions({
@@ -35,6 +38,7 @@ export class QuestionService {
       difficulty,
       language,
       content,
+      bloom_level,
       topic
     })
       : type === QuestionType.FILL_IN_THE_BLANK ? await this.generator.generateFillInTheBlankQuestions({
@@ -42,30 +46,35 @@ export class QuestionService {
         quantity,
         difficulty,
         language,
+        bloom_level,
         content
       }) : type === QuestionType.SHORT_ANSWER ? await this.generator.generateShortAnswerQuestions({
         type,
         quantity,
         difficulty,
         language,
+        bloom_level,
         content
       }) : type === QuestionType.LONG_ANSWER ? await this.generator.generateLongAnswerQuestions({
         type,
         quantity,
         difficulty,
         language,
+        bloom_level,
         content
       }) : type === QuestionType.MATCHING ? await this.generator.generateMatchingAnswerQuestions({
         type,
         quantity,
         difficulty,
         language,
+        bloom_level,
         content
       }) : await this.generator.generateQuestions({
         type,
         quantity,
         difficulty,
         language,
+        bloom_level,
         content,
         topic
       });

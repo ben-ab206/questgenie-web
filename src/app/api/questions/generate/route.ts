@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { QuestionService } from '@/app/api/questions/question-service';
-import { DifficultyLevel, Language, Question, QuestionType } from '@/types/questions';
+import { BloomLevel, DifficultyLevel, Language, Question, QuestionType } from '@/types/questions';
 import { ValidationError } from '@/lib/validation';
 import { calculateProcessingTime } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/server';
@@ -13,6 +13,7 @@ interface RequestBody {
   type: QuestionType;
   topic?: string;
   source?: string;
+  bloom_level?: string;
   model?: string;
   title: string;
   description?: string;
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
       body.content,
       body.type,
       body.quantity,
+      body.bloom_level as BloomLevel,
       body.difficulty,
       body.language,
     );
@@ -80,6 +82,7 @@ async function parseRequestBody(request: NextRequest): Promise<RequestBody> {
     quantity: body.quantity ?? 10,
     difficulty: body.difficulty ?? DifficultyLevel.MEDIUM,
     language: body.language ?? Language.ENGLISH,
+    bloom_level: body.bloom_level,
     type: body.type,
     topic: body.topic,
     source: body.source,

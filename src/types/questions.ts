@@ -3,6 +3,7 @@ import { Subjects } from "./subjects";
 export interface QuestionConfig {
   type: QuestionType;
   quantity: number;
+  bloom_level: BloomLevel;
   difficulty: DifficultyLevel;
   language: Language;
   content: string;
@@ -33,7 +34,8 @@ export interface Question {
   matching_answers?: {
     A: string
     B: string
-  }[]
+  }[],
+  bloom_level: BloomLevel;
 }
 
 export interface GenerationResult {
@@ -87,7 +89,18 @@ export enum QuestionType {
 export enum DifficultyLevel {
   EASY = 'easy',
   MEDIUM = 'medium',
-  HIGH = 'high'
+  HIGH = 'high',
+  MIXED = 'mixed'
+}
+
+export enum BloomLevel {
+  UNDERSTAND = 'understand',
+  REMEMBER = 'remember',
+  APPLY = 'apply',
+  ANALYZE = 'analyze',
+  EVALUATE = 'evaluate',
+  CREATE = 'create',
+  MIXED = 'mixed',
 }
 
 export enum Language {
@@ -106,6 +119,7 @@ export interface OpenRouterConfig {
 export interface MCQConfig {
   language: Language;
   difficulty: DifficultyLevel;
+  bloom_level: BloomLevel;
   topic?: string;
   quantity: number;
   content: string;

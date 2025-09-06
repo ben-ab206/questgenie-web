@@ -44,6 +44,7 @@ function createQuestion(item: any, config: QuestionConfig, index: number): Quest
     return {
       type: QuestionType.MULTIPLE_CHOICE,
       difficulty: config.difficulty,
+      bloom_level: config.bloom_level,
       language: config.language,
       question: String(item.question).trim(),
       answer: optionsArray[correctIndex],
@@ -153,6 +154,7 @@ function createLegacyMCQQuestion(item: any, config: QuestionConfig, index: numbe
   return {
     type: QuestionType.MULTIPLE_CHOICE,
     difficulty: config.difficulty,
+    bloom_level: config.bloom_level,
     language: config.language,
     question: String(item.question).trim(),
     answer: String(item.options[item.correctOptionIndex]).trim(),
@@ -160,7 +162,6 @@ function createLegacyMCQQuestion(item: any, config: QuestionConfig, index: numbe
   };
 }
 
-// Utility function to validate parsed MCQ questions
 export function validateMCQQuestions(questions: Question[]): void {
   questions.forEach((question, index) => {
     if (question.type !== QuestionType.MULTIPLE_CHOICE) {
@@ -173,5 +174,4 @@ export function validateMCQQuestions(questions: Question[]): void {
   });
 }
 
-// Export main parser function
 export { parseMCQResponse as parseResponse };
