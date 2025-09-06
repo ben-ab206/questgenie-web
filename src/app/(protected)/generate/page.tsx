@@ -80,6 +80,21 @@ const GeneratePage = () => {
         }
     })
 
+    const exportQuestionsWithFilename = (questions: Question[], filename?: string) => {
+        const jsonString = JSON.stringify(questions, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename || `questions-export-${Date.now()}.json`;
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     const validateForm = (): ValidationErrors => {
         const newErrors: ValidationErrors = {};
 
@@ -248,9 +263,13 @@ const GeneratePage = () => {
         );
     };
 
+    const onExport = () => {
+        exportQuestionsWithFilename(questions, title)
+    }
+
     return (
         <div className="h-full">
-            <HeaderGenerate />
+            <HeaderGenerate onExportFunc={onExport}/>
             <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-2">
                 <div className="p-4 space-y-4 overflow-y-auto h-full">
                     <div>
