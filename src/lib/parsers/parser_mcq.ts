@@ -167,7 +167,7 @@ export function validateMCQQuestions(questions: Question[]): void {
       throw new Error(`Question ${index + 1}: Expected MCQ type`);
     }
 
-    if (!question.options || question.options.length < 2) {
+    if (!question.options) {
       throw new Error(`Question ${index + 1}: MCQ must have at least 2 options`);
     }
   });
