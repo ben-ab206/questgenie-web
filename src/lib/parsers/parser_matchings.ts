@@ -46,6 +46,7 @@ function createMatchingQuestion(item: any, config: QuestionConfig, index: number
       type: QuestionType.MATCHING,
       difficulty: config.difficulty,
       language: config.language,
+      bloom_level: config.bloom_level,
       question: String(item.question).trim(),
       answer: '', // Not used for matching questions
       matching_questions: item.matching_questions,

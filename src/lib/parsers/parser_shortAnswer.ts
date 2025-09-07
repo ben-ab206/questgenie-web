@@ -46,6 +46,7 @@ function createShortAnswerQuestion(item: any, config: QuestionConfig, index: num
       type: QuestionType.SHORT_ANSWER,
       difficulty: config.difficulty,
       language: config.language,
+      bloom_level: config.bloom_level,
       question: String(item.question).trim(),
       answer: String(item.answer).trim(),
       explanation: item.explanation ? String(item.explanation).trim() : undefined,

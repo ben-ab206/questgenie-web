@@ -43,6 +43,7 @@ function createQuestion(item: any, config: QuestionConfig, index: number): Quest
       type: QuestionType.FILL_IN_THE_BLANK,
       difficulty: config.difficulty,
       language: config.language,
+      bloom_level: config.bloom_level,
       question: String(item.question).trim(),
       answer: item.answer,
     };
@@ -149,6 +150,7 @@ function createLegacyQuestion(item: any, config: QuestionConfig, index: number):
     type: QuestionType.FILL_IN_THE_BLANK,
     difficulty: config.difficulty,
     language: config.language,
+    bloom_level: config.bloom_level,
     question: String(question).trim(),
     answer: answer
   };

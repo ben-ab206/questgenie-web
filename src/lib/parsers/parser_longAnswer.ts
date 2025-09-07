@@ -45,6 +45,7 @@ function createLongAnswerQuestion(item: any, config: QuestionConfig, index: numb
     return {
       type: QuestionType.LONG_ANSWER,
       difficulty: config.difficulty,
+      bloom_level: config.bloom_level,
       language: config.language,
       question: String(item.question).trim(),
       answer: String(item.answer).trim(),
