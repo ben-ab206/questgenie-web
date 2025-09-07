@@ -42,6 +42,7 @@ function createQuestion(item: any, config: QuestionConfig, index: number): Quest
     type: config.type,
     difficulty: config.difficulty,
     language: config.language,
+    bloom_level: config.bloom_level,
     question: String(item.question).trim(),
     answer: String(item.answer).trim(),
     options: item.options ? item.options.map((opt: any) => String(opt).trim()) : undefined,
