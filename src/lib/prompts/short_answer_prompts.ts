@@ -79,12 +79,6 @@ function getShortAnswerDifficultyInstruction(difficulty: DifficultyLevel): strin
   return instructions[difficulty];
 }
 
-function getShortAnswerTopicInstruction(topic?: string): string {
-  return topic 
-    ? `TOPIC FOCUS: Concentrate specifically on "${topic}" within the provided content.`
-    : 'TOPIC FOCUS: Identify and focus on the most important concepts and factual information in the content.';
-}
-
 function getShortAnswerLengthInstruction(answerLength?: 'brief' | 'moderate' | 'detailed'): string {
   const instructions = {
     'brief': 'ANSWER LENGTH: Expect answers to be 1-3 words or a short phrase (5-15 words maximum)',

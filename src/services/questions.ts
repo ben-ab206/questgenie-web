@@ -16,7 +16,7 @@ type GenerateQuestionsParams = {
     bloom_level?: BloomLevel;
     difficulty?: DifficultyLevel;
     language?: Language;
-    type?: QuestionType;
+    type?: QuestionType[];
     topic?: string;
     source?: string;
 };

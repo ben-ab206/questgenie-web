@@ -31,3 +31,16 @@ export function calculateProcessingTime(startTime: number): number {
 export function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export function generateRandomSelection(stringList: string[], maxNumber: number): string[] {
+  const result: string[] = [];
+  const numberOfRandom = stringList.length;
+  
+  for (let i = 0; i < numberOfRandom; i++) {
+    const randomIndex = Math.floor(Math.random() * maxNumber);
+    const selectedString = stringList[randomIndex % stringList.length];
+    result.push(selectedString);
+  }
+  
+  return result;
+}

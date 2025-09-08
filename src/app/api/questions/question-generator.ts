@@ -1,7 +1,5 @@
 import { OpenRouterClient } from './openrouter';
-import { buildPrompt } from '@/lib/prompts/prompts';
-import { parseResponse } from '@/lib/parsers/parser';
-import { GenerationResult, QuestionConfig } from '@/types/questions';
+import { GenerationResult, QuestionConfig, QuestionType } from '@/types/questions';
 import { validateQuestionConfig } from '@/lib/validation';
 import { calculateProcessingTime, delay, generateContentHash } from '@/lib/utils';
 import { buildMCQPrompt } from '@/lib/prompts/mcq_prompts';
@@ -16,6 +14,7 @@ import { buildLongAnswerPrompt } from '@/lib/prompts/long_answer_prompts';
 import { parseLongAnswerResponse } from '@/lib/parsers/parser_longAnswer';
 import { buildMatchingQuestionPrompt } from '@/lib/prompts/matching_prompts';
 import { parseMatchingResponse } from '@/lib/parsers/parser_matchings';
+import { generateRandomQuestionPromptMix } from '@/lib/prompts/mix_prompts';
 
 export class QuestionGenerator {
   private openRouterClient: OpenRouterClient;
@@ -24,55 +23,6 @@ export class QuestionGenerator {
   constructor(apiKey: string, model: string = 'gemini-2.5-flash-lite-preview-06-17') {
     this.openRouterClient = new OpenRouterClient({ apiKey, model });
     this.model = model;
-  }
-
-  async generateQuestions(config: QuestionConfig): Promise<GenerationResult> {
-    const startTime = Date.now();
-
-    try {
-      validateQuestionConfig(config);
-      
-      const prompt = buildPrompt(config);
-      const response = await this.openRouterClient.generateResponse(prompt);
-      const questions = parseResponse(response, config);
-
-      return {
-        success: true,
-        questions,
-        contentHash: generateContentHash(config.content),
-        metadata: {
-          generatedAt: new Date(),
-          model: this.model,
-          processingTimeMs: calculateProcessingTime(startTime)
-        }
-      };
-    } catch (error) {
-      return {
-        success: false,
-        questions: [],
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        metadata: {
-          generatedAt: new Date(),
-          model: this.model,
-          processingTimeMs: calculateProcessingTime(startTime)
-        }
-      };
-    }
-  }
-
-  async generateBatch(configs: QuestionConfig[]): Promise<GenerationResult[]> {
-    const results: GenerationResult[] = [];
-    
-    for (const config of configs) {
-      const result = await this.generateQuestions(config);
-      results.push(result);
-      
-      if (configs.length > 1) {
-        await delay(1000);
-      }
-    }
-    
-    return results;
   }
 
   async generateMCQQuestions(config: QuestionConfig): Promise<GenerationResult> {
@@ -254,6 +204,81 @@ export class QuestionGenerator {
       const prompt = buildMatchingQuestionPrompt(config);
       const response = await this.openRouterClient.generateResponse(prompt);
       const questions = parseMatchingResponse(response, config);
+
+      return {
+        success: true,
+        questions,
+        contentHash: generateContentHash(config.content),
+        metadata: {
+          generatedAt: new Date(),
+          model: this.model,
+          processingTimeMs: calculateProcessingTime(startTime)
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        questions: [],
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        metadata: {
+          generatedAt: new Date(),
+          model: this.model,
+          processingTimeMs: calculateProcessingTime(startTime)
+        }
+      };
+    }
+  }
+
+  async generateMixQuestions(config: QuestionConfig): Promise<GenerationResult> {
+    const startTime = Date.now();
+
+    try {
+      validateQuestionConfig(config);
+      
+      const prompts = generateRandomQuestionPromptMix({
+        questionTypes: config.type,
+        totalQuantity: config.quantity,
+        content: config.content,
+        language: config.language,
+        difficulty: config.difficulty,
+        bloomLevel: config.bloom_level
+      });
+
+      const questions = [];
+      
+      for (const p of prompts) {
+        const response = await this.openRouterClient.generateResponse(p.prompt);
+        
+        let parsedQuestions;
+        switch (p.type) {
+          case QuestionType.FILL_IN_THE_BLANK:
+            parsedQuestions = parseFillInBlankResponse(response, config);
+            break;
+          case QuestionType.LONG_ANSWER:
+            parsedQuestions = parseLongAnswerResponse(response, config);
+            break;
+          case QuestionType.MATCHING:
+            parsedQuestions = parseMatchingResponse(response, config);
+            break;
+          case QuestionType.MULTIPLE_CHOICE:
+            parsedQuestions = parseMCQResponse(response, config);
+            break;
+          case QuestionType.SHORT_ANSWER:
+            parsedQuestions = parseShortAnswerResponse(response, config);
+            break;
+          case QuestionType.TRUE_FALSE:
+            parsedQuestions = parseTrueFalseResponse(response, config);
+            break;
+          default:
+            parsedQuestions = parseShortAnswerResponse(response, config);
+        }
+        
+        if (Array.isArray(parsedQuestions)) {
+          questions.push(...parsedQuestions);
+        } else {
+          questions.push(parsedQuestions);
+        }
+      }
 
       return {
         success: true,

@@ -95,7 +95,7 @@ export function parseFlexibleShortAnswerResponse(response: string, config: Quest
 
     return parsedData.map((item, index) => {
       // Handle different possible field names
-      const question = item.question || item.prompt || item.text || item.statement;
+      const question = item.question || item.prompt || item.text || item.question;
       const answer = item.answer || item.response || item.solution || item.correctAnswer;
 
       if (!question) {

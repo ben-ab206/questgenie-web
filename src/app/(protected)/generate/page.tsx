@@ -71,7 +71,7 @@ const GeneratePage = () => {
             difficulty: difficulty,
             bloom_level: bloom as BloomLevel,
             quantity: questionCount,
-            type: questionTypes[0],
+            type: questionTypes,
             source: sourceType,
             title: title,
             description: description,
@@ -172,7 +172,7 @@ const GeneratePage = () => {
     const handleQuestionTypeChange = (type: QuestionType, checked: boolean) => {
         let newTypes: QuestionType[];
         if (checked) {
-            newTypes = [type]; // Based on your current logic, only one type at a time
+            newTypes = [...questionTypes, type]; // Based on your current logic, only one type at a time
         } else {
             newTypes = questionTypes.filter(t => t !== type);
         }

@@ -1,6 +1,16 @@
 import { Subjects } from "./subjects";
 
 export interface QuestionConfig {
+  type: QuestionType[];
+  quantity: number;
+  bloom_level: BloomLevel;
+  difficulty: DifficultyLevel;
+  language: Language;
+  content: string;
+  topic?: string;
+}
+
+export interface GenerateQuestionConfig {
   type: QuestionType;
   quantity: number;
   bloom_level: BloomLevel;
@@ -166,11 +176,11 @@ export interface TrueFalseConfig {
   avoidAmbiguity?: boolean;
   focusOnKeyPoints?: boolean;
   balanceAnswers?: boolean; // Whether to balance true/false distribution
-  requireJustification?: boolean; // Whether false statements need correction
+  requireJustification?: boolean; // Whether false questions need correction
 }
 
 export interface TrueFalseResponse {
-  statement: string;
+  question: string;
   answer: boolean;
   contentReference: string;
   explanation?: string;

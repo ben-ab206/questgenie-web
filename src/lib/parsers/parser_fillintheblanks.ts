@@ -102,7 +102,7 @@ export function parseLegacyFillInBlankResponse(response: string, config: Questio
     }
 
     return parsedData.map((item, index) => {
-      if (item.text || item.statement || item.sentence) {
+      if (item.text || item.question || item.sentence) {
         return createLegacyQuestion(item, config, index);
       }
       
@@ -115,7 +115,7 @@ export function parseLegacyFillInBlankResponse(response: string, config: Questio
 }
 
 function createLegacyQuestion(item: any, config: QuestionConfig, index: number): Question {
-  const question = item.question || item.text || item.statement || item.sentence;
+  const question = item.question || item.text || item.question || item.sentence;
   const answer = item.answer || item.correctAnswer || item.solution;
 
   if (!question) {
@@ -146,7 +146,7 @@ export function parseFlexibleFillInBlankResponse(response: string, config: Quest
     }
 
     return parsedData.map((item, index) => {
-      const question = item.question || item.text || item.statement || item.sentence || item.prompt;
+      const question = item.question || item.text || item.question || item.sentence || item.prompt;
       const answer = item.answer || item.correctAnswer || item.solution || item.fill || item.blank;
       const choices = item.choices || item.options || item.alternatives;
 

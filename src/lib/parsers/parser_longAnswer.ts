@@ -139,7 +139,7 @@ export function parseFlexibleLongAnswerResponse(response: string, config: Questi
 
     return parsedData.map((item, index) => {
       // Handle different possible field names
-      const question = item.question || item.prompt || item.text || item.statement || item.essayQuestion;
+      const question = item.question || item.prompt || item.text || item.question || item.essayQuestion;
       const answer = item.answer || item.response || item.solution || item.sampleAnswer || item.modelAnswer;
 
       if (!question) {

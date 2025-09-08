@@ -55,13 +55,17 @@ function validateQuantity(quantity: number): void {
   }
 }
 
-function validateType(type: QuestionType): void {
-  if (!Object.values(QuestionType).includes(type)) {
-    throw new ValidationError(
-      `Invalid question type. Must be one of: ${Object.values(QuestionType).join(', ')}`,
-      'type',
-      'INVALID_TYPE'
-    );
+function validateType(types: QuestionType[]): void {
+  const validTypes = Object.values(QuestionType);
+
+  for (const type of types) {
+    if (!validTypes.includes(type)) {
+      throw new ValidationError(
+        `Invalid question type "${type}". Must be one of: ${validTypes.join(', ')}`,
+        'type',
+        'INVALID_TYPE'
+      );
+    }
   }
 }
 

@@ -15,15 +15,15 @@ ${difficultyInstruction}
 ${balanceInstruction}
 
 TRUE/FALSE SPECIFIC REQUIREMENTS:
-1. Create exactly ${config.quantity} true/false statement(s)
-2. Each statement must be definitively either TRUE or FALSE based on the content
-3. Base ALL statements strictly on the provided content below
+1. Create exactly ${config.quantity} true/false question(s)
+2. Each question must be definitively either TRUE or FALSE based on the content
+3. Base ALL questions strictly on the provided content below
 4. Do not use external knowledge beyond the given content
-5. Ensure statements are clear, unambiguous, and testable
-6. Make statements substantive - test understanding, not trivial details
-7. Avoid statements that could be interpreted as partially true or contextually dependent
+5. Ensure questions are clear, unambiguous, and testable
+6. Make questions substantive - test understanding, not trivial details
+7. Avoid questions that could be interpreted as partially true or contextually dependent
 ${config.includeExplanation ? '8. Provide brief explanations for all answers' : ''}
-${config.requireJustification ? '9. For FALSE statements, provide the correct information' : ''}
+${config.requireJustification ? '9. For FALSE questions, provide the correct information' : ''}
 
 ${qualityInstructions}
 
@@ -35,17 +35,17 @@ ${config.content}
 OUTPUT FORMAT (JSON array only, no additional text):
 [
   {
-    "statement": "Clear, specific statement to be evaluated as true or false",
+    "question": "Clear, specific question to be evaluated as true or false",
     "answer": true,
-    "contentReference": "Brief reference to content section used"${config.includeExplanation ? ',\n    "explanation": "Brief explanation of why this statement is true/false"' : ''}${config.requireJustification ? ',\n    "correction": "For false statements: the correct information from the content"' : ''}
+    "contentReference": "Brief reference to content section used"${config.includeExplanation ? ',\n    "explanation": "Brief explanation of why this question is true/false"' : ''}${config.requireJustification ? ',\n    "correction": "For false questions: the correct information from the content"' : ''}
   }
 ]`;
 }
 
 function getTrueFalseLanguageInstruction(language: Language): string {
   const instructions = {
-    [Language.BURMESE]: 'Generate all True/False statements, explanations, and corrections in Burmese (Myanmar) language using proper Burmese script and grammar.',
-    [Language.ENGLISH]: 'Generate all True/False statements, explanations, and corrections in clear, proper English.',
+    [Language.BURMESE]: 'Generate all True/False questions, explanations, and corrections in Burmese (Myanmar) language using proper Burmese script and grammar.',
+    [Language.ENGLISH]: 'Generate all True/False questions, explanations, and corrections in clear, proper English.',
   };
 
   return instructions[language] || instructions[Language.ENGLISH];
@@ -55,20 +55,20 @@ function getTrueFalseDifficultyInstruction(difficulty: DifficultyLevel): string 
   const instructions = {
     [DifficultyLevel.EASY]: `DIFFICULTY: EASY
 - Focus on direct facts and explicit information from the content
-- Create statements that are obviously true or false to careful readers
+- Create questions that are obviously true or false to careful readers
 - Use straightforward, literal interpretations of the content
 - Avoid complex relationships or nuanced interpretations`,
 
     [DifficultyLevel.MEDIUM]: `DIFFICULTY: MEDIUM  
 - Test understanding of concepts and relationships in the content
-- Create statements requiring careful reading and comprehension
-- Include statements about cause-and-effect relationships
+- Create questions requiring careful reading and comprehension
+- Include questions about cause-and-effect relationships
 - Test understanding of implications and connections between ideas`,
 
     [DifficultyLevel.HIGH]: `DIFFICULTY: HIGH
 - Require synthesis of multiple parts of the content
 - Test deep comprehension and inference abilities
-- Create statements about complex relationships and implications
+- Create questions about complex relationships and implications
 - Challenge understanding of subtle distinctions and nuanced concepts
 - Require critical analysis of the content's meaning and implications`,
 
@@ -95,7 +95,7 @@ function getTrueFalseBalanceInstruction(balanceAnswers?: boolean): string {
     return 'ANSWER DISTRIBUTION: Create questions naturally based on content - no need to balance true/false answers.';
   }
   
-  return `ANSWER DISTRIBUTION: Try to create a roughly balanced mix of TRUE and FALSE statements when possible, but prioritize content accuracy over forced balance.`;
+  return `ANSWER DISTRIBUTION: Try to create a roughly balanced mix of TRUE and FALSE questions when possible, but prioritize content accuracy over forced balance.`;
 }
 
 function getTrueFalseQualityInstructions(config: TrueFalseConfig): string {
@@ -103,25 +103,25 @@ function getTrueFalseQualityInstructions(config: TrueFalseConfig): string {
 
   if (config.avoidAmbiguity !== false) {
     instructions += `
-- Ensure statements are unambiguous - clearly true or false
-- Avoid statements that could be "sometimes true" or contextually dependent
-- Make statements specific and testable against the content`;
+- Ensure questions are unambiguous - clearly true or false
+- Avoid questions that could be "sometimes true" or contextually dependent
+- Make questions specific and testable against the content`;
   }
 
   if (config.focusOnKeyPoints !== false) {
     instructions += `
 - Prioritize testing the most important information and concepts
 - Focus on significant facts rather than trivial details
-- Ensure statements assess meaningful understanding of the content`;
+- Ensure questions assess meaningful understanding of the content`;
   }
 
   instructions += `
-- Write complete, grammatically correct statements
-- Ensure statements stand alone without requiring additional context
+- Write complete, grammatically correct questions
+- Ensure questions stand alone without requiring additional context
 - Avoid double negatives or complex sentence structures
-- Make FALSE statements believable but clearly incorrect based on content
-- Ensure TRUE statements are definitively supported by the provided material
-- Maintain consistent tone and style across all statements`;
+- Make FALSE questions believable but clearly incorrect based on content
+- Ensure TRUE questions are definitively supported by the provided material
+- Maintain consistent tone and style across all questions`;
 
   return instructions;
 }
@@ -184,10 +184,10 @@ export function buildAdvancedTrueFalsePrompt(config: TrueFalseConfig): string {
 export function validateTrueFalseResponse(response: any): response is TrueFalseResponse {
   return (
     typeof response === 'object' &&
-    typeof response.statement === 'string' &&
+    typeof response.question === 'string' &&
     typeof response.answer === 'boolean' &&
     typeof response.contentReference === 'string' &&
-    response.statement.length > 0 &&
+    response.question.length > 0 &&
     response.contentReference.length > 0
   );
 }

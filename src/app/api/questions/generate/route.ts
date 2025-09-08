@@ -10,7 +10,7 @@ interface RequestBody {
   quantity?: number;
   difficulty?: DifficultyLevel;
   language?: Language;
-  type: QuestionType;
+  type: QuestionType[];
   topic?: string;
   source?: string;
   bloom_level?: string;
@@ -34,14 +34,25 @@ export async function POST(request: NextRequest) {
 
     questionService = createQuestionService(body.model);
 
-    const questions = await questionService.generateSpecificType(
-      body.content,
-      body.type,
-      body.quantity,
-      body.bloom_level as BloomLevel,
-      body.difficulty,
-      body.language,
-    );
+    let questions = [] as Question[]
+
+    if (body.type.length > 1) {
+      questions = await questionService.generateMixedType(body.content,
+        body.type,
+        body.quantity,
+        body.bloom_level as BloomLevel,
+        body.difficulty,
+        body.language)
+    } else {
+      questions = await questionService.generateSpecificType(
+        body.content,
+        body.type,
+        body.quantity,
+        body.bloom_level as BloomLevel,
+        body.difficulty,
+        body.language
+      );
+    }
 
     const subject = await createSubject(supabase, user.id, body);
     await saveQuestions(supabase, questions, subject.id);
@@ -71,8 +82,8 @@ async function initializeServices() {
     const { data } = await supabase.from('users').select('*').eq('user_id', user.id).eq('is_active', true).maybeSingle();
     if (data) return { user: data, supabase };
   }
-  return { user: undefined, supabase } 
-  
+  return { user: undefined, supabase }
+
 }
 
 async function parseRequestBody(request: NextRequest): Promise<RequestBody> {

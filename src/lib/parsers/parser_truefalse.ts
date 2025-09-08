@@ -21,7 +21,7 @@ export function parseTrueFalseResponse(response: string, config: QuestionConfig)
 function extractJsonFromResponse(response: string): string {
   let cleaned = response.trim();
   
-  cleaned = cleaned.replace(/^(Here's the|Here are the|The statements are:|Generated statements:|True\/False questions:).*?\n/i, '');
+  cleaned = cleaned.replace(/^(Here's the|Here are the|The questions are:|Generated questions:|True\/False questions:).*?\n/i, '');
   
   cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
   
@@ -46,28 +46,28 @@ function createTrueFalseQuestion(item: any, config: QuestionConfig, index: numbe
       difficulty: config.difficulty,
       language: config.language,
       bloom_level: config.bloom_level,
-      question: String(item.statement || item.question).trim(),
+      question: String(item.question || item.question).trim(),
       answer: answer,
       explanation: item.explanation ? String(item.explanation).trim() : undefined,
     };
   } catch (error) {
-    throw new Error(`Statement ${index + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(`question ${index + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 function validateTrueFalseItem(item: any, index: number): void {
-  const statement = item.statement || item.question;
+  const question = item.question || item.question;
   
-  if (!statement) {
-    throw new Error(`Missing required field 'statement' or 'question'`);
+  if (!question) {
+    throw new Error(`Missing required field 'question' or 'question'`);
   }
 
   if (item.answer === undefined || item.answer === null) {
     throw new Error(`Missing required field 'answer'`);
   }
 
-  if (typeof statement !== 'string' || statement.trim().length === 0) {
-    throw new Error(`Statement/question must be a non-empty string`);
+  if (typeof question !== 'string' || question.trim().length === 0) {
+    throw new Error(`question/question must be a non-empty string`);
   }
 
   try {
@@ -124,12 +124,12 @@ export function parseLegacyTrueFalseResponse(response: string, config: QuestionC
 }
 
 function createLegacyTrueFalseQuestion(item: any, config: QuestionConfig, index: number): Question {
-  if (!item.question && !item.statement) {
-    throw new Error(`Statement ${index + 1} missing required field 'question' or 'statement'`);
+  if (!item.question && !item.question) {
+    throw new Error(`question ${index + 1} missing required field 'question' or 'question'`);
   }
 
   if (item.isTrue === undefined && item.answer === undefined) {
-    throw new Error(`Statement ${index + 1} missing required field 'isTrue' or 'answer'`);
+    throw new Error(`question ${index + 1} missing required field 'isTrue' or 'answer'`);
   }
 
   const answerValue = item.answer !== undefined ? item.answer : item.isTrue;
@@ -140,7 +140,7 @@ function createLegacyTrueFalseQuestion(item: any, config: QuestionConfig, index:
     difficulty: config.difficulty,
     language: config.language,
     bloom_level: config.bloom_level,
-    question: String(item.question || item.statement).trim(),
+    question: String(item.question || item.question).trim(),
     answer: answer,
     explanation: item.explanation ? String(item.explanation).trim() : undefined,
   };
@@ -156,22 +156,22 @@ export function parseFlexibleTrueFalseResponse(response: string, config: Questio
     }
 
     return parsedData.map((item, index) => {
-      const statement = item.statement || item.question || item.text;
+      const question = item.question || item.question || item.text;
       const answer = item.answer !== undefined ? item.answer : 
                     item.isTrue !== undefined ? item.isTrue :
                     item.correct !== undefined ? item.correct :
                     item.value;
 
-      if (!statement) {
-        throw new Error(`Statement ${index + 1}: No statement/question field found`);
+      if (!question) {
+        throw new Error(`question ${index + 1}: No question field found`);
       }
 
       if (answer === undefined || answer === null) {
-        throw new Error(`Statement ${index + 1}: No answer field found`);
+        throw new Error(`question ${index + 1}: No answer field found`);
       }
 
       const normalizedItem = {
-        statement: statement,
+        question: question,
         answer,
         explanation: item.explanation || item.reason || item.justification,
         contentReference: item.contentReference || item.source || item.reference

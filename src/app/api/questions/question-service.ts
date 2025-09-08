@@ -17,14 +17,14 @@ export class QuestionService {
 
   async generateSpecificType(
     content: string,
-    type: QuestionType,
+    type: QuestionType[],
     quantity: number = 5,
     bloom_level: BloomLevel = BloomLevel.MIXED,
     difficulty: DifficultyLevel = DifficultyLevel.MEDIUM,
     language: Language = Language.ENGLISH,
     topic?: string
   ): Promise<Question[]> {
-    const result = type === QuestionType.MULTIPLE_CHOICE ? await this.generator.generateMCQQuestions({
+    const result = type[0] === QuestionType.MULTIPLE_CHOICE ? await this.generator.generateMCQQuestions({
       type,
       quantity,
       difficulty,
@@ -32,7 +32,7 @@ export class QuestionService {
       bloom_level,
       content,
       topic
-    }) : type === QuestionType.TRUE_FALSE ? await this.generator.generateTrueFalseQuestions({
+    }) : type[0] === QuestionType.TRUE_FALSE ? await this.generator.generateTrueFalseQuestions({
       type,
       quantity,
       difficulty,
@@ -41,43 +41,68 @@ export class QuestionService {
       bloom_level,
       topic
     })
-      : type === QuestionType.FILL_IN_THE_BLANK ? await this.generator.generateFillInTheBlankQuestions({
+      : type[0] === QuestionType.FILL_IN_THE_BLANK ? await this.generator.generateFillInTheBlankQuestions({
         type,
         quantity,
         difficulty,
         language,
         bloom_level,
         content
-      }) : type === QuestionType.SHORT_ANSWER ? await this.generator.generateShortAnswerQuestions({
+      }) : type[0] === QuestionType.SHORT_ANSWER ? await this.generator.generateShortAnswerQuestions({
         type,
         quantity,
         difficulty,
         language,
         bloom_level,
         content
-      }) : type === QuestionType.LONG_ANSWER ? await this.generator.generateLongAnswerQuestions({
+      }) : type[0] === QuestionType.LONG_ANSWER ? await this.generator.generateLongAnswerQuestions({
         type,
         quantity,
         difficulty,
         language,
         bloom_level,
         content
-      }) : type === QuestionType.MATCHING ? await this.generator.generateMatchingAnswerQuestions({
+      }) : type[0] === QuestionType.MATCHING ? await this.generator.generateMatchingAnswerQuestions({
         type,
         quantity,
         difficulty,
         language,
         bloom_level,
         content
-      }) : await this.generator.generateQuestions({
+      }) : await this.generator.generateMatchingAnswerQuestions({
         type,
         quantity,
         difficulty,
         language,
         bloom_level,
-        content,
-        topic
-      });
+        content
+      }) 
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to generate questions');
+    }
+
+    return result.questions;
+  }
+
+  async generateMixedType(
+    content: string,
+    type: QuestionType[],
+    quantity: number = 5,
+    bloom_level: BloomLevel = BloomLevel.MIXED,
+    difficulty: DifficultyLevel = DifficultyLevel.MEDIUM,
+    language: Language = Language.ENGLISH,
+    topic?: string
+  ): Promise<Question[]> {
+    const result = await this.generator.generateMixQuestions({
+      type,
+      quantity,
+      difficulty,
+      language,
+      bloom_level,
+      content,
+      topic
+    });
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to generate questions');
