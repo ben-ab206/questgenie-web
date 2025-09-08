@@ -67,6 +67,13 @@ function getDifficultyInstruction(difficulty: DifficultyLevel): string {
     [DifficultyLevel.EASY]: 'Focus on basic recall and simple facts from the content.',
     [DifficultyLevel.MEDIUM]: 'Test comprehension and application of concepts.',
     [DifficultyLevel.HIGH]: 'Demand critical thinking and complex reasoning about the content.',
+    [DifficultyLevel.MIXED]: `DIFFICULTY: MIXED
+- Combine questions from all difficulty levels (Easy, Medium, High)
+- Start with easier recall questions to build confidence
+- Progress to medium-level conceptual understanding questions
+- Include some challenging synthesis and analysis questions
+- Ensure balanced coverage: ~40% Easy, ~40% Medium, ~20% High
+- Create a natural learning progression from basic to advanced concepts`
   };
 
   return `Difficulty level: ${difficulty}. ${instructions[difficulty]}`;

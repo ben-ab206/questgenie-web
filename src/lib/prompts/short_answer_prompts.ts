@@ -65,7 +65,15 @@ function getShortAnswerDifficultyInstruction(difficulty: DifficultyLevel): strin
 - Ask questions about implications, significance, and complex relationships
 - Challenge understanding of underlying principles and applications
 - Require critical thinking and deeper interpretation of the content
-- Answers should demonstrate comprehensive understanding`
+- Answers should demonstrate comprehensive understanding`,
+
+[DifficultyLevel.MIXED]: `DIFFICULTY: MIXED
+- Combine questions from all difficulty levels (Easy, Medium, High)
+- Start with easier recall questions to build confidence
+- Progress to medium-level conceptual understanding questions
+- Include some challenging synthesis and analysis questions
+- Ensure balanced coverage: ~40% Easy, ~40% Medium, ~20% High
+- Create a natural learning progression from basic to advanced concepts`
   };
 
   return instructions[difficulty];

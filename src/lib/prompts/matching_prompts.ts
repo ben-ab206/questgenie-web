@@ -85,7 +85,15 @@ function getMatchingDifficultyInstruction(difficulty: DifficultyLevel): string {
 - Test sophisticated understanding of interconnections and implications
 - Column A might contain: complex theories, abstract principles, advanced concepts
 - Column B might contain: applications, implications, complex examples, theoretical outcomes
-- Relationships should require deep understanding and may involve multiple layers of connection`
+- Relationships should require deep understanding and may involve multiple layers of connection`,
+
+[DifficultyLevel.MIXED]: `DIFFICULTY: MIXED
+- Combine questions from all difficulty levels (Easy, Medium, High)
+- Start with easier recall questions to build confidence
+- Progress to medium-level conceptual understanding questions
+- Include some challenging synthesis and analysis questions
+- Ensure balanced coverage: ~40% Easy, ~40% Medium, ~20% High
+- Create a natural learning progression from basic to advanced concepts`
   };
 
   return instructions[difficulty];

@@ -72,7 +72,15 @@ function getLongAnswerDifficultyInstruction(difficulty: DifficultyLevel): string
 - Challenge understanding of underlying principles and their applications
 - Require argumentation with evidence and counterarguments
 - Answers should demonstrate sophisticated reasoning with 4-5 main points
-- Include questions like "Critically evaluate...", "Justify your position...", "Synthesize the evidence for..."`
+- Include questions like "Critically evaluate...", "Justify your position...", "Synthesize the evidence for..."`,
+
+[DifficultyLevel.MIXED]: `DIFFICULTY: MIXED
+- Combine questions from all difficulty levels (Easy, Medium, High)
+- Start with easier recall questions to build confidence
+- Progress to medium-level conceptual understanding questions
+- Include some challenging synthesis and analysis questions
+- Ensure balanced coverage: ~40% Easy, ~40% Medium, ~20% High
+- Create a natural learning progression from basic to advanced concepts`
   };
 
   return instructions[difficulty];

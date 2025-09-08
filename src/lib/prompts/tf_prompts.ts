@@ -70,7 +70,15 @@ function getTrueFalseDifficultyInstruction(difficulty: DifficultyLevel): string 
 - Test deep comprehension and inference abilities
 - Create statements about complex relationships and implications
 - Challenge understanding of subtle distinctions and nuanced concepts
-- Require critical analysis of the content's meaning and implications`
+- Require critical analysis of the content's meaning and implications`,
+
+[DifficultyLevel.MIXED]: `DIFFICULTY: MIXED
+- Combine questions from all difficulty levels (Easy, Medium, High)
+- Start with easier recall questions to build confidence
+- Progress to medium-level conceptual understanding questions
+- Include some challenging synthesis and analysis questions
+- Ensure balanced coverage: ~40% Easy, ~40% Medium, ~20% High
+- Create a natural learning progression from basic to advanced concepts`
   };
 
   return instructions[difficulty];

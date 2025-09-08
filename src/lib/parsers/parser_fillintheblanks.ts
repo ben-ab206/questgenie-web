@@ -74,26 +74,6 @@ function validateFillInBlankItem(item: any, index: number): void {
   }
 }
 
-function normalizeAnswer(answer: any): string | string[] {
-  if (Array.isArray(answer)) {
-    return answer.map(a => String(a).trim()).filter(a => a.length > 0);
-  }
-  
-  return String(answer).trim();
-}
-
-function normalizeChoices(choices: any): string[] | undefined {
-  if (!Array.isArray(choices)) {
-    return undefined;
-  }
-
-  const normalizedChoices = choices
-    .map(choice => String(choice).trim())
-    .filter(choice => choice.length > 0);
-
-  return normalizedChoices.length > 0 ? normalizedChoices : undefined;
-}
-
 function countBlanks(question: string): number {
   const blankPatterns = [
     /______/g,

@@ -62,9 +62,17 @@ function getFillInBlankDifficultyInstruction(difficulty: DifficultyLevel): strin
 - Test synthesis and deeper understanding
 - Use blanks for complex concepts requiring inference
 - Create questions demanding analysis of multiple content parts
-- Challenge understanding of nuanced relationships and implications`
-  };
+- Challenge understanding of nuanced relationships and implications`,
+  
 
+  [DifficultyLevel.MIXED]: `DIFFICULTY: MIXED
+- Combine questions from all difficulty levels (Easy, Medium, High)
+- Start with easier recall questions to build confidence
+- Progress to medium-level conceptual understanding questions
+- Include some challenging synthesis and analysis questions
+- Ensure balanced coverage: ~40% Easy, ~40% Medium, ~20% High
+- Create a natural learning progression from basic to advanced concepts`
+};
   return instructions[difficulty];
 }
 

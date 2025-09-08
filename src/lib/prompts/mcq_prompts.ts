@@ -79,9 +79,12 @@ function getMCQDifficultyInstruction(difficulty: DifficultyLevel): string {
 - Require analysis, evaluation, or complex reasoning about the content`,
 
     [DifficultyLevel.MIXED]: `DIFFICULTY: MIXED
-- Create questions at varying difficulty levels within the set
-- Include a mix of easy recall, medium understanding, and high-level analysis questions
-- Ensure balanced distribution across difficulty levels`
+- Combine questions from all difficulty levels (Easy, Medium, High)
+- Start with easier recall questions to build confidence
+- Progress to medium-level conceptual understanding questions
+- Include some challenging synthesis and analysis questions
+- Ensure balanced coverage: ~40% Easy, ~40% Medium, ~20% High
+- Create a natural learning progression from basic to advanced concepts`
   };
 
   return instructions[difficulty];
