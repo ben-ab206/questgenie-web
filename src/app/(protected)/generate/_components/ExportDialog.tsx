@@ -1,6 +1,7 @@
 "use client";
 
 import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { exportQuestionsToCSV, exportQuestionsToPDF } from "@/lib/utils";
 import { Question } from "@/types/questions";
 import { Dialog } from "@radix-ui/react-dialog";
 
@@ -30,8 +31,13 @@ const ExportDialog = ({ dialogOpen, data, onClose }: ExportDialogProps) => {
     };
 
     const onExport = (type: "pdf" | "json" | "csv") => {
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
         if(type === "json") exportQuestionsWithFilename(data);
+        if(type === "pdf") exportQuestionsToPDF(data, `testing-${timestamp}`)
+        if(type === "csv") exportQuestionsToCSV(data, `testing-${timestamp}`)
+        onClose();
     }
+
     return <Dialog open={dialogOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl w-full">
             <DialogHeader>

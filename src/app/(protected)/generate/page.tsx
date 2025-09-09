@@ -649,7 +649,7 @@ const GeneratePage = () => {
                 </div>
             </div>
             <LoadingModal isOpen={isPending} />
-            <ExportDialog dialogOpen={showExportDialog} data={[]} onClose={()=> setShowExportDialog(false)} />
+            <ExportDialog dialogOpen={showExportDialog} data={questions} onClose={()=> setShowExportDialog(false)} />
         </div>
     );
 }
