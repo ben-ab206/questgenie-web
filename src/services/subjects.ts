@@ -91,5 +91,29 @@ const fetchSubjectTypes = async (): Promise<string[]> => {
     }
 };
 
-export { fetchSubjects, fetchSubjectTypes };
+
+const fetchSubjectDetail = async (id: number): Promise<Subjects> => {
+    try {
+        const url = `/api/subjects/${id}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            return data.data as Subjects;
+        } else {
+            throw new Error(data.error || 'Failed to fetch subjects detail');
+        }
+    } catch (err) {
+        throw err;
+    }
+};
+
+export { fetchSubjects, fetchSubjectTypes, fetchSubjectDetail };
 export type { FetchSubjectsParams, SubjectsResponse };

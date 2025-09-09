@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import crypto from 'crypto';
 import jsPDF from 'jspdf';
-import { Question, QuestionType } from "@/types/questions";
+import { Question, QuestionBank, QuestionType } from "@/types/questions";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -167,6 +167,145 @@ export const exportQuestionsToCSV = (questions: Question[], filename = 'question
         question.language,
         escapeCSVField(question.question),
         escapeCSVField(question.answer),
+        escapeCSVField(question.options?.A || ''),
+        escapeCSVField(question.options?.B || ''),
+        escapeCSVField(question.options?.C || ''),
+        escapeCSVField(question.options?.D || ''),
+        escapeCSVField(question.options?.E || ''),
+        escapeCSVField(question.explanation || ''),
+        question.bloom_level,
+        escapeCSVField(formatMatchingQuestions(question.matching_questions)),
+        escapeCSVField(formatMatchingAnswers(question.matching_answers))
+      ];
+      return row.join(',');
+    })
+  ];
+
+  const csvContent = csvRows.join('\n');
+
+  downloadCSV(csvContent, filename);
+};
+
+
+
+export const exportQuestionsBankToPDF = (questions: QuestionBank[], file_name: string) => {
+  console.log(questions)
+  const doc = new jsPDF();
+  let yPosition = 20;
+  const pageHeight = doc.internal.pageSize.height;
+  const margin = 20;
+  
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Questions Export', margin, yPosition);
+  yPosition += 20;
+  
+  questions.forEach((question, index) => {
+    if (yPosition > pageHeight - 50) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${index + 1}. [${question.type.toUpperCase()}] - ${question.difficulty}`, margin, yPosition);
+    yPosition += 8;
+    
+    doc.setFont('helvetica', 'normal');
+    const questionLines = doc.splitTextToSize(question.question_text, 170);
+    doc.text(questionLines, margin, yPosition);
+    yPosition += questionLines.length * 6;
+    
+    switch (question.type) {
+      case QuestionType.MULTIPLE_CHOICE:
+        if (question.options) {
+          doc.text(`A) ${question.options.A}`, margin + 10, yPosition);
+          yPosition += 6;
+          doc.text(`B) ${question.options.B}`, margin + 10, yPosition);
+          yPosition += 6;
+          doc.text(`C) ${question.options.C}`, margin + 10, yPosition);
+          yPosition += 6;
+          doc.text(`D) ${question.options.D}`, margin + 10, yPosition);
+          yPosition += 6;
+          if (question.options.E) {
+            doc.text(`E) ${question.options.E}`, margin + 10, yPosition);
+            yPosition += 6;
+          }
+        }
+        break;
+        
+      case QuestionType.MATCHING:
+        if (question.matching_questions && question.matching_answers) {
+          doc.text('Match the following:', margin + 10, yPosition);
+          yPosition += 8;
+          
+          question.matching_questions.forEach((item, idx) => {
+            doc.text(`${item.A} ↔ ${item.B}`, margin + 15, yPosition);
+            yPosition += 6;
+          });
+        }
+        break;
+        
+      case QuestionType.TRUE_FALSE:
+        doc.text('□ True    □ False', margin + 10, yPosition);
+        yPosition += 8;
+        break;
+        
+      case QuestionType.FILL_IN_THE_BLANK:
+      case QuestionType.SHORT_ANSWER:
+      case QuestionType.LONG_ANSWER:
+        doc.text('Answer: ________________________', margin + 10, yPosition);
+        yPosition += 8;
+        break;
+    }
+    
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(10);
+    const answerLines = doc.splitTextToSize(`Answer: ${question.answer_text}`, 170);
+    doc.text(answerLines, margin, yPosition);
+    yPosition += answerLines.length * 5;
+    
+    if (question.explanation) {
+      const explanationLines = doc.splitTextToSize(`Explanation: ${question.explanation}`, 170);
+      doc.text(explanationLines, margin, yPosition);
+      yPosition += explanationLines.length * 5;
+    }
+    
+    doc.setFontSize(8);
+    doc.text(`Bloom Level: ${question.bloom_level}`, margin, yPosition);
+    yPosition += 15;
+  });
+  
+  doc.save(`${file_name}-questions-export.pdf`);
+};
+
+export const exportQuestionsBankToCSV = (questions: QuestionBank[], filename = 'questions-export.csv') => {
+  const headers = [
+    'Type',
+    'Difficulty',
+    'Language',
+    'Question',
+    'Answer',
+    'Option A',
+    'Option B',
+    'Option C',
+    'Option D',
+    'Option E',
+    'Explanation',
+    'Bloom Level',
+    'Matching Questions',
+    'Matching Answers'
+  ];
+
+  const csvRows = [
+    headers.join(','),
+    ...questions.map(question => {
+      const row = [
+        question.type,
+        question.difficulty,
+        question.language,
+        escapeCSVField(question.question_text),
+        escapeCSVField(question.answer_text),
         escapeCSVField(question.options?.A || ''),
         escapeCSVField(question.options?.B || ''),
         escapeCSVField(question.options?.C || ''),

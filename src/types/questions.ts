@@ -244,6 +244,7 @@ export interface QuestionBank {
   difficulty: string;
   language: string;
   type: string;
+  bloom_level?: string;
   options?: {
     A: string;
     B: string;

@@ -1,3 +1,5 @@
+import { QuestionBank } from "./questions";
+
 export interface Subjects {
   id: number;
   created_at: string;
@@ -10,4 +12,5 @@ export interface Subjects {
   metadata?: any;
   description?: string;
   title?: string;
+  questions_bank?: QuestionBank[]
 }

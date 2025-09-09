@@ -39,6 +39,10 @@ export default function Sidebar({
     }
   };
 
+  const goToProfile = () => {
+    router.push('/profile');
+  }
+
   const handleLogout = () => {
     onLogout?.();
   };
@@ -150,24 +154,24 @@ export default function Sidebar({
         ))}
       </nav>
       
-      <div className="p-5 border-t border-gray-200">
-        <div className={cn(
-          "flex items-center mb-3 transition-all duration-300",
+      <div className="py-5 px-5 border-t border-gray-200">
+        <button className={cn(
+          "flex items-center mb-3 transition-all duration-300 hover:bg-primary/10 w-full px-2 py-1 rounded-lg",
           isCollapsed ? "justify-center" : "space-x-3"
-        )}>
+        )} onClick={goToProfile}>
           <div className="w-10 h-10 border rounded-full flex items-center justify-center bg-gray-50">
             <span className="font-semibold text-sm text-gray-700">
               {getInitials(userName, userEmail)}
             </span>
           </div>
           {!isCollapsed && (
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-start">
               <p className="font-medium text-sm truncate text-gray-800" data-testid="text-username">
                 {userName}
               </p>
             </div>
           )}
-        </div>
+        </button>
         <Button 
           variant="ghost" 
           size="sm" 
