@@ -1,3 +1,5 @@
+import { UserProfile } from "@/types/user"
+
 const login = async ({ email, password }: { email: string, password: string }) => {
     try {
         const response = await fetch('/api/auth/login', {
@@ -23,4 +25,50 @@ const login = async ({ email, password }: { email: string, password: string }) =
     }
 }
 
-export { login }
+const getCurrentUser = async () => {
+    try {
+        const response = await fetch('/api/profile', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+            return data.data as UserProfile
+        } else {
+            throw new Error(data.error || 'Login failed')
+        }
+    } catch (err) {
+        throw err
+    }
+}
+
+const updateCurrentUser = async ({ name, email }: { name?: string, email?: string }) => {
+    try {
+        const response = await fetch('/api/profile', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name,
+                email,
+            }),
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+            return data.data as UserProfile
+        } else {
+            throw new Error(data.error || 'Login failed')
+        }
+    } catch (err) {
+        throw err
+    }
+}
+
+export { login, getCurrentUser, updateCurrentUser }

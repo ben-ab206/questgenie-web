@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { calculateProcessingTime } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/server'
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const startTime = Date.now()
-  const { id } = params
+  const { id } = await context.params // Await the params Promise
 
   try {
     const { user, supabase } = await initializeServices()

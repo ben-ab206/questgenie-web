@@ -2,12 +2,23 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import HeaderProfile from "./_components/Header";
+import { useQuery } from "@tanstack/react-query";
+import { getCurrentUser } from "@/services/auth";
+import { useState } from "react";
+import EmailDialog from "./_components/EmailDialog";
 
 const ProfilePage = () => {
 
+    const [ showEmailDialog, setShowEmailDialog ] = useState(false);
+
+    const { data: profile } = useQuery({
+        queryKey: ["ME"],
+        queryFn: getCurrentUser
+    });
+
     const handleProfilePictureChange = () => { }
 
-    const handleChangeEmail = () => { }
+    const handleChangeEmail = () => { setShowEmailDialog(true); }
 
     return <div className="bg-primary/10 min-h-screen h-full w-full">
         <HeaderProfile />
@@ -33,7 +44,9 @@ const ProfilePage = () => {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Name
                                     </label>
-
+                                    <div className="p-2 bg-gray-200 rounded-lg lg:w-[30%] sm:w-[50%]">
+                                        <p>{profile?.name}</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -54,7 +67,7 @@ const ProfilePage = () => {
                                         Email
                                     </label>
                                     <p className="text-gray-600">
-                                        {"email@gmail.com"}
+                                        {profile?.email}
                                     </p>
                                 </div>
 
@@ -70,6 +83,8 @@ const ProfilePage = () => {
                 </CardContent>
             </Card>
         </div>
+
+        <EmailDialog dialogOpen={showEmailDialog} onClose={()=> setShowEmailDialog(false)}/>
     </div>
 }
 
