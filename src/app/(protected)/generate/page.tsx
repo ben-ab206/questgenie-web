@@ -21,6 +21,7 @@ import TFQuestionBox from "./_components/TFQuestionBox";
 import BlankQuestionBox from "./_components/BlankQuestionBox";
 import LAQuestionBox from "./_components/LAQuestionBox";
 import SAQuestionBox from "./_components/SAQuestionBox";
+import ExportDialog from "./_components/ExportDialog";
 
 let worker: TesseractWorker | null = null;
 
@@ -50,6 +51,7 @@ const GeneratePage = () => {
     const [uploadFile, setUploadFile] = useState<File | undefined>(undefined);
     const [content, setContent] = useState("");
     const [title, setTitle] = useState("");
+    const [ showExportDialog, setShowExportDialog ] = useState(false);
     const [description, setDescription] = useState("");
     const [isExtracting, setIsExtracting] = useState(false);
     const [sourceType, setSourceType] = useState<"text" | "file" | "youtube" | "image">("text");
@@ -80,21 +82,6 @@ const GeneratePage = () => {
             setQuestions(data?.data?.questions ?? [])
         }
     })
-
-    const exportQuestionsWithFilename = (questions: Question[], filename?: string) => {
-        const jsonString = JSON.stringify(questions, null, 2);
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename || `questions-export-${Date.now()}.json`;
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    };
 
     const validateForm = (): ValidationErrors => {
         const newErrors: ValidationErrors = {};
@@ -265,7 +252,8 @@ const GeneratePage = () => {
     };
 
     const onExport = () => {
-        exportQuestionsWithFilename(questions, title)
+        // exportQuestionsWithFilename(questions, title)
+        setShowExportDialog(true);
     }
 
     return (
@@ -661,6 +649,7 @@ const GeneratePage = () => {
                 </div>
             </div>
             <LoadingModal isOpen={isPending} />
+            <ExportDialog dialogOpen={showExportDialog} data={[]} onClose={()=> setShowExportDialog(false)} />
         </div>
     );
 }
