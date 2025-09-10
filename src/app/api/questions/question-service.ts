@@ -24,7 +24,7 @@ export class QuestionService {
     language: Language = Language.ENGLISH,
     topic?: string
   ): Promise<Question[]> {
-    const result = type[0] === QuestionType.MULTIPLE_CHOICE ? await this.generator.generateMCQQuestions({
+    const result = type[0] === QuestionType.SINGLE_CHOICE ? await this.generator.generateSCQQuestions({
       type,
       quantity,
       difficulty,
@@ -69,6 +69,14 @@ export class QuestionService {
         language,
         bloom_level,
         content
+      }) : type[0] === QuestionType.MULTIPLE_CHOICE ? await this.generator.generateMCQQuestions({
+        type,
+        quantity,
+        difficulty,
+        language,
+        bloom_level,
+        content,
+        topic
       }) : await this.generator.generateMatchingAnswerQuestions({
         type,
         quantity,
@@ -76,7 +84,7 @@ export class QuestionService {
         language,
         bloom_level,
         content
-      }) 
+      })
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to generate questions');

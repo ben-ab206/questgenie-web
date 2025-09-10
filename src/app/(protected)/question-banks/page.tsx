@@ -2,8 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import HeaderQuestionBank from "./_components/Header";
-import { InputIcon } from "@/components/ui/input-icon";
-import { ArrowUpRight, Calendar1Icon, ClockIcon, FileIcon, Plus, SearchIcon, TrashIcon } from "lucide-react";
+import { ArrowUpRight, Calendar1Icon, FileIcon, Plus, TrashIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -20,6 +19,10 @@ const QuestionBanksPage = () => {
         queryKey: ['GET_SUBJECTS'],
         queryFn: () => fetchSubjects()
     })
+
+    const goToDetail = (id: number) => {
+        router.push(`question-banks/${id}`)
+    }
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -80,7 +83,7 @@ const QuestionBanksPage = () => {
                                                 <p className="text-xs">{s.created_at}</p>
                                             </div>
                                             <div className="flex items-center w-full space-x-2">
-                                                <button className="flex-grow bg-primary/10 rounded py-1">
+                                                <button className="flex-grow bg-primary/10 rounded py-1" onClick={()=> goToDetail(s.id)}>
                                                     <span>View</span>
                                                 </button>
                                                 <TrashIcon className="h-4 w-4" />

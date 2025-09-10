@@ -1,11 +1,10 @@
 import { DifficultyLevel, Question } from "@/types/questions";
 
-interface MCQQuestionBoxProps {
+interface SCQQuestionBoxProps {
   question: Question;
   index: number;
 }
-
-const MCQQuestionBox: React.FC<MCQQuestionBoxProps> = ({ question, index }) => {
+const SCQQuestionBox: React.FC<SCQQuestionBoxProps> = ({ question, index }) => {
   const getDifficultyColor = (difficulty: DifficultyLevel) => {
     switch (difficulty) {
       case 'easy': return 'bg-green-100 text-green-800';
@@ -15,13 +14,18 @@ const MCQQuestionBox: React.FC<MCQQuestionBoxProps> = ({ question, index }) => {
     }
   };
 
-  const getCorrectOptionKeys = () => {
-    if (!question.options || !question.mcq_answers) return [];
+  const getCorrectOptionKey = () => {
+    if (!question.options) return null;
     
-    return question.mcq_answers.filter(key => question.options![key]);
+    const optionEntries = Object.entries(question.options);
+    const correctEntry = optionEntries.find(([key, value]) => 
+      value.toLowerCase().trim() === question.answer?.toLowerCase().trim()
+    );
+    
+    return correctEntry ? correctEntry[0] : null;
   };
 
-  const correctOptionKeys = getCorrectOptionKeys();
+  const correctOptionKey = getCorrectOptionKey();
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
@@ -31,7 +35,7 @@ const MCQQuestionBox: React.FC<MCQQuestionBoxProps> = ({ question, index }) => {
           {index + 1}
         </div>
         <span className="text-blue-600 font-medium">{question.type}</span>
-        <span className={`px-2 py-1 rounded-full text-sm font-medium ${getDifficultyColor(question.difficulty as DifficultyLevel)}`}>
+        <span className={`px-2 py-1 rounded-full text-sm font-medium ${getDifficultyColor(question.difficulty)}`}>
           {question.difficulty}
         </span>
         <span className="text-blue-500 font-medium">{question.language}</span>
@@ -42,22 +46,13 @@ const MCQQuestionBox: React.FC<MCQQuestionBoxProps> = ({ question, index }) => {
         {question.question}
       </h3>
 
-      {/* Multiple Correct Answers Indicator */}
-      {correctOptionKeys.length > 1 && (
-        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-          <p className="text-amber-800 text-sm font-medium">
-            ⚠️ Multiple Choice Question: Select {correctOptionKeys.length} correct answers
-          </p>
-        </div>
-      )}
-
       {/* Options */}
       {question.options && (
         <div className="space-y-3">
           {Object.entries(question.options).map(([key, value]) => {
             if (!value) return null; // Skip empty options (like optional E)
             
-            const isCorrect = correctOptionKeys.includes(key as keyof typeof question.options);
+            const isCorrect = key === correctOptionKey;
             
             return (
               <div
@@ -84,18 +79,6 @@ const MCQQuestionBox: React.FC<MCQQuestionBoxProps> = ({ question, index }) => {
         </div>
       )}
 
-      {/* Correct Answers Summary */}
-      {correctOptionKeys.length > 0 && (
-        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <h4 className="font-semibold text-green-900 mb-1">
-            Correct Answer{correctOptionKeys.length > 1 ? 's' : ''}:
-          </h4>
-          <p className="text-green-800 text-sm">
-            {correctOptionKeys.join(', ')}
-          </p>
-        </div>
-      )}
-
       {/* Explanation */}
       {question.explanation && (
         <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -107,4 +90,4 @@ const MCQQuestionBox: React.FC<MCQQuestionBoxProps> = ({ question, index }) => {
   );
 };
 
-export default MCQQuestionBox;
+export default SCQQuestionBox;

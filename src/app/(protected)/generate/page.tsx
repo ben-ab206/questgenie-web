@@ -16,12 +16,13 @@ import HeaderGenerate from "./_components/Header";
 import Tesseract, { Worker as TesseractWorker } from "tesseract.js";
 import { generateQuestions } from "@/services/questions";
 import LoadingModal from "@/components/LoadingModal";
-import MCQQuestionBox from "./_components/MCQQuestionBox";
+import SCQQuestionBox from "./_components/SCQQuestionBox";
 import TFQuestionBox from "./_components/TFQuestionBox";
 import BlankQuestionBox from "./_components/BlankQuestionBox";
 import LAQuestionBox from "./_components/LAQuestionBox";
 import SAQuestionBox from "./_components/SAQuestionBox";
 import ExportDialog from "./_components/ExportDialog";
+import MCQQuestionBox from "./_components/MCQQuestionBox";
 
 let worker: TesseractWorker | null = null;
 
@@ -57,7 +58,7 @@ const GeneratePage = () => {
     const [sourceType, setSourceType] = useState<"text" | "file" | "youtube" | "image">("text");
     const [youtubeUrl, setYoutubeUrl] = useState("");
 
-    const [questionTypes, setQuestionTypes] = useState<QuestionType[]>([QuestionType.MULTIPLE_CHOICE]);
+    const [questionTypes, setQuestionTypes] = useState<QuestionType[]>([QuestionType.SINGLE_CHOICE]);
     const [difficulty, setDifficulty] = useState(DifficultyLevel.MEDIUM);
     const [questionCount, setQuestionCount] = useState(10);
     const [language, setLanguage] = useState<string>("english");
@@ -465,6 +466,15 @@ const GeneratePage = () => {
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         <Checkbox
+                                            id={QuestionType.SINGLE_CHOICE}
+                                            checked={questionTypes.includes(QuestionType.SINGLE_CHOICE)}
+                                            onCheckedChange={(checked) => handleQuestionTypeChange(QuestionType.SINGLE_CHOICE, !!checked)}
+                                            data-testid="question-type-scq"
+                                        />
+                                        <Label htmlFor="scq" className="text-sm">Single Choice (MCQ)</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
                                             id={QuestionType.TRUE_FALSE}
                                             checked={questionTypes.includes(QuestionType.TRUE_FALSE)}
                                             onCheckedChange={(checked) => handleQuestionTypeChange(QuestionType.TRUE_FALSE, !!checked)}
@@ -640,11 +650,13 @@ const GeneratePage = () => {
                 </div>
                 <div className="w-full h-full bg-white space-y-2 p-3">
                     {questions.map((q, idx) => <div key={idx}>
-                        {q.type === QuestionType.MULTIPLE_CHOICE && <MCQQuestionBox question={q} index={idx} />}
+                        {q.type === QuestionType.SINGLE_CHOICE && <SCQQuestionBox question={q} index={idx} />}
                         {q.type === QuestionType.TRUE_FALSE && <TFQuestionBox question={q} index={idx} />}
                         {q.type === QuestionType.FILL_IN_THE_BLANK && <BlankQuestionBox question={q} index={idx} />}
                         {q.type === QuestionType.LONG_ANSWER && <LAQuestionBox question={q} idx={idx} />}
                         {q.type === QuestionType.SHORT_ANSWER && <SAQuestionBox question={q} idx={idx} />}
+                        {q.type === QuestionType.MATCHING && <SCQQuestionBox question={q} index={idx} />}
+                        {q.type === QuestionType.MULTIPLE_CHOICE && <MCQQuestionBox question={q} index={idx}/>}
                     </div>)}
                 </div>
             </div>

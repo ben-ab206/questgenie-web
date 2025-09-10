@@ -179,7 +179,8 @@ function createQuestionData(question: Question, subjectId: string) {
     type: question.type,
     explanation: question.explanation,
     matching_questions: question.matching_questions,
-    matching_answers: question.matching_answers
+    matching_answers: question.matching_answers,
+    mcq_answers: question.mcq_answers,
   };
 
   // Add options for multiple choice questions

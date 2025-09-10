@@ -4,6 +4,7 @@ interface MCQQuestionBoxProps {
   question: QuestionBank;
   index: number;
 }
+
 const MCQQuestionBox: React.FC<MCQQuestionBoxProps> = ({ question, index }) => {
   const getDifficultyColor = (difficulty: DifficultyLevel) => {
     switch (difficulty) {
@@ -14,18 +15,13 @@ const MCQQuestionBox: React.FC<MCQQuestionBoxProps> = ({ question, index }) => {
     }
   };
 
-  const getCorrectOptionKey = () => {
-    if (!question.options) return null;
+  const getCorrectOptionKeys = () => {
+    if (!question.options || !question.mcq_answers) return [];
     
-    const optionEntries = Object.entries(question.options);
-    const correctEntry = optionEntries.find(([key, value]) => 
-      value.toLowerCase().trim() === question.answer_text.toLowerCase().trim()
-    );
-    
-    return correctEntry ? correctEntry[0] : null;
+    return question.mcq_answers.filter(key => question.options![key]);
   };
 
-  const correctOptionKey = getCorrectOptionKey();
+  const correctOptionKeys = getCorrectOptionKeys();
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
@@ -46,13 +42,22 @@ const MCQQuestionBox: React.FC<MCQQuestionBoxProps> = ({ question, index }) => {
         {question.question_text}
       </h3>
 
+      {/* Multiple Correct Answers Indicator */}
+      {correctOptionKeys.length > 1 && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-amber-800 text-sm font-medium">
+            ⚠️ Multiple Choice Question: Select {correctOptionKeys.length} correct answers
+          </p>
+        </div>
+      )}
+
       {/* Options */}
       {question.options && (
         <div className="space-y-3">
           {Object.entries(question.options).map(([key, value]) => {
             if (!value) return null; // Skip empty options (like optional E)
             
-            const isCorrect = key === correctOptionKey;
+            const isCorrect = correctOptionKeys.includes(key as keyof typeof question.options);
             
             return (
               <div
@@ -76,6 +81,18 @@ const MCQQuestionBox: React.FC<MCQQuestionBoxProps> = ({ question, index }) => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Correct Answers Summary */}
+      {correctOptionKeys.length > 0 && (
+        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <h4 className="font-semibold text-green-900 mb-1">
+            Correct Answer{correctOptionKeys.length > 1 ? 's' : ''}:
+          </h4>
+          <p className="text-green-800 text-sm">
+            {correctOptionKeys.join(', ')}
+          </p>
         </div>
       )}
 

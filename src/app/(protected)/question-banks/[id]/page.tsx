@@ -8,13 +8,15 @@ import { Calendar, FileIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSubjectDetail } from "@/services/subjects";
 import { QuestionType } from "@/types/questions";
-import MCQQuestionBox from "@/components/MCQQuestionBox";
+import SCQQuestionBox from "@/components/SCQQuestionBox";
 import TFQuestionBox from "@/components/TFQuestionBox";
 import BlankQuestionBox from "@/components/BlankQuestionBox";
 import LAQuestionBox from "@/components/LAQuestionBox";
 import SAQuestionBox from "@/components/SAQuestionBox";
 import { useState } from "react";
 import ExportDialog from "../_components/ExportDialog";
+import MatchingQuestion from "@/components/MatchingQuestionBox";
+import MCQQuestionBox from "@/components/MCQQuestionBox";
 
 const QuestionBankDetails = () => {
     const params = useParams<{ id: string }>()
@@ -60,11 +62,13 @@ const QuestionBankDetails = () => {
                         <p>{`10 questions generated`}</p>
                     </div>
                     {subjects?.questions_bank && subjects.questions_bank.map((q, idx) => <div key={idx}>
-                        {q.type === QuestionType.MULTIPLE_CHOICE && <MCQQuestionBox question={q} index={idx} />}
+                        {q.type === QuestionType.SINGLE_CHOICE && <SCQQuestionBox question={q} index={idx} />}
                         {q.type === QuestionType.TRUE_FALSE && <TFQuestionBox question={q} index={idx} />}
                         {q.type === QuestionType.FILL_IN_THE_BLANK && <BlankQuestionBox question={q} index={idx} />}
                         {q.type === QuestionType.LONG_ANSWER && <LAQuestionBox question={q} idx={idx} />}
                         {q.type === QuestionType.SHORT_ANSWER && <SAQuestionBox question={q} idx={idx} />}
+                        {q.type === QuestionType.MATCHING && <MatchingQuestion question={q} idx={idx} />}
+                        {q.type === QuestionType.MULTIPLE_CHOICE && <MCQQuestionBox question={q} index={idx} />}                        
                     </div>)}
                 </CardContent>
             </Card>

@@ -21,18 +21,17 @@ export function parseMatchingResponse(response: string, config: QuestionConfig):
 function extractJsonFromResponse(response: string): string {
   let cleaned = response.trim();
   
-  // Remove common prefixes
-  cleaned = cleaned.replace(/^(Here's the|Here are the|The questions are:|Generated questions:|Matching questions:).*?\n/i, '');
-  
-  // Remove markdown code blocks
-  cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-  
-  // Remove non-JSON content before and after
-  cleaned = cleaned.replace(/^[^[\{]*/, '').replace(/[^}\]]*$/, '');
+  // Remove common prefixes and markdown
+  cleaned = cleaned
+    .replace(/^(Here's the|Here are the|The questions are:|Generated questions:|Matching questions:).*?\n/i, '')
+    .replace(/^```(?:json)?\n?/, '')
+    .replace(/\n?```$/, '')
+    .replace(/^[^[\{]*/, '')
+    .replace(/[^}\]]*$/, '');
 
   const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
   if (!jsonMatch) {
-    throw new Error('No valid JSON array found in Matching response');
+    throw new Error('No valid JSON array found in response');
   }
 
   return jsonMatch[0];
@@ -49,8 +48,8 @@ function createMatchingQuestion(item: any, config: QuestionConfig, index: number
       bloom_level: config.bloom_level,
       question: String(item.question).trim(),
       answer: '', // Not used for matching questions
-      matching_questions: item.matching_questions,
-      matching_answers: item.matching_answers,
+      matching_questions: normalizeMatchingPairs(item.matching_questions),
+      matching_answers: normalizeMatchingPairs(item.matching_answers),
       explanation: item.explanation ? String(item.explanation).trim() : undefined,
     };
   } catch (error) {
@@ -58,94 +57,58 @@ function createMatchingQuestion(item: any, config: QuestionConfig, index: number
   }
 }
 
+function normalizeMatchingPairs(pairs: any[]): { [key: string]: string }[] {
+  return pairs.map(pair => {
+    // Handle both old format {A: "...", B: "..."} and new format {"1": "...", "A": "..."}
+    const entries = Object.entries(pair);
+    if (entries.length === 2) {
+      const [first, second] = entries;
+      return {
+        [first[0]]: String(first[1]).trim(),
+        [second[0]]: String(second[1]).trim()
+      };
+    }
+    throw new Error('Invalid pair format');
+  });
+}
+
 function validateMatchingItem(item: any, index: number): void {
-  if (!item.question) {
-    throw new Error(`Missing required field 'question'`);
+  if (!item.question || typeof item.question !== 'string' || item.question.trim().length === 0) {
+    throw new Error('Question must be a non-empty string');
   }
 
-  if (!item.matching_questions) {
-    throw new Error(`Missing required field 'matching_questions'`);
+  if (!Array.isArray(item.matching_questions) || item.matching_questions.length === 0) {
+    throw new Error('matching_questions must be a non-empty array');
   }
 
-  if (!item.matching_answers) {
-    throw new Error(`Missing required field 'matching_answers'`);
-  }
-
-  if (typeof item.question !== 'string' || item.question.trim().length === 0) {
-    throw new Error(`Question must be a non-empty string`);
-  }
-
-  if (!Array.isArray(item.matching_questions)) {
-    throw new Error(`matching_questions must be an array`);
-  }
-
-  if (!Array.isArray(item.matching_answers)) {
-    throw new Error(`matching_answers must be an array`);
-  }
-
-  if (item.matching_questions.length === 0) {
-    throw new Error(`matching_questions cannot be empty`);
-  }
-
-  if (item.matching_answers.length === 0) {
-    throw new Error(`matching_answers cannot be empty`);
+  if (!Array.isArray(item.matching_answers) || item.matching_answers.length === 0) {
+    throw new Error('matching_answers must be a non-empty array');
   }
 
   if (item.matching_questions.length !== item.matching_answers.length) {
-    throw new Error(`matching_questions and matching_answers must have the same length`);
+    throw new Error('matching_questions and matching_answers must have same length');
   }
 
-  // Validate matching_questions structure
-  item.matching_questions.forEach((pair: any, pairIndex: number) => {
-    if (!pair.A || !pair.B) {
-      throw new Error(`matching_questions[${pairIndex}] must have both A and B properties`);
+  // Validate pair structure
+  [...item.matching_questions, ...item.matching_answers].forEach((pair, pairIndex) => {
+    if (typeof pair !== 'object' || Object.keys(pair).length !== 2) {
+      throw new Error(`Pair ${pairIndex + 1} must have exactly 2 properties`);
     }
-    if (typeof pair.A !== 'string' || typeof pair.B !== 'string') {
-      throw new Error(`matching_questions[${pairIndex}] A and B must be strings`);
-    }
-    if (pair.A.trim().length === 0 || pair.B.trim().length === 0) {
-      throw new Error(`matching_questions[${pairIndex}] A and B cannot be empty`);
-    }
+    
+    Object.values(pair).forEach(value => {
+      if (typeof value !== 'string' || String(value).trim().length === 0) {
+        throw new Error(`All pair values must be non-empty strings`);
+      }
+    });
   });
 
-  // Validate matching_answers structure
-  item.matching_answers.forEach((pair: any, pairIndex: number) => {
-    if (!pair.A || !pair.B) {
-      throw new Error(`matching_answers[${pairIndex}] must have both A and B properties`);
-    }
-    if (typeof pair.A !== 'string' || typeof pair.B !== 'string') {
-      throw new Error(`matching_answers[${pairIndex}] A and B must be strings`);
-    }
-    if (pair.A.trim().length === 0 || pair.B.trim().length === 0) {
-      throw new Error(`matching_answers[${pairIndex}] A and B cannot be empty`);
-    }
-  });
-
-  // Validate that all answer pairs exist in question pairs
-  const questionPairs = item.matching_questions;
-  const answerPairs = item.matching_answers;
-
-  answerPairs.forEach((answer: any, answerIndex: number) => {
-    const matchExists = questionPairs.some((question: any) => 
-      question.A === answer.A && question.B === answer.B
-    );
-    if (!matchExists) {
-      throw new Error(`matching_answers[${answerIndex}] does not correspond to any pair in matching_questions`);
-    }
-  });
-
-  // Check for reasonable question length
+  // Basic length checks
   if (item.question.trim().length < 10) {
-    throw new Error(`Question appears to be too short`);
+    throw new Error('Question appears too short');
   }
 
-  // Check for reasonable number of pairs (should be 4-10 typically)
-  if (item.matching_questions.length < 3) {
-    console.warn(`Question ${index + 1}: Very few matching pairs (${item.matching_questions.length}) - consider adding more`);
-  }
-
-  if (item.matching_questions.length > 12) {
-    console.warn(`Question ${index + 1}: Many matching pairs (${item.matching_questions.length}) - consider reducing for usability`);
+  if (item.matching_questions.length < 3 || item.matching_questions.length > 12) {
+    console.warn(`Question ${index + 1}: ${item.matching_questions.length} pairs may not be optimal (3-8 recommended)`);
   }
 }
 
@@ -159,35 +122,26 @@ export function parseFlexibleMatchingResponse(response: string, config: Question
     }
 
     return parsedData.map((item, index) => {
-      // Handle different possible field names
       const question = item.question || item.prompt || item.instruction || item.task;
       const matchingQuestions = item.matching_questions || item.questions || item.pairs || item.items;
       const matchingAnswers = item.matching_answers || item.answers || item.solutions || item.correct_matches;
 
-      if (!question) {
-        throw new Error(`Question ${index + 1}: No question field found`);
-      }
-
-      if (!matchingQuestions) {
-        throw new Error(`Question ${index + 1}: No matching_questions field found`);
-      }
-
-      if (!matchingAnswers) {
-        throw new Error(`Question ${index + 1}: No matching_answers field found`);
+      if (!question || !matchingQuestions || !matchingAnswers) {
+        throw new Error(`Question ${index + 1}: Missing required fields`);
       }
 
       const normalizedItem = {
-        question: question,
+        question,
         matching_questions: matchingQuestions,
         matching_answers: matchingAnswers,
-        explanation: item.explanation || item.reasoning || item.justification || item.rationale
+        explanation: item.explanation || item.reasoning || item.justification
       };
 
       return createMatchingQuestion(normalizedItem, config, index);
     });
   } catch (error) {
     console.error('Flexible Matching Parse error:', error);
-    throw new Error(`Failed to parse flexible Matching response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(`Failed to parse flexible response: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -197,44 +151,37 @@ export function validateMatchingQuestions(questions: Question[]): void {
       throw new Error(`Question ${index + 1}: Expected Matching type`);
     }
 
-    if (!question.question || question.question.trim().length === 0) {
+    if (!question.question?.trim()) {
       throw new Error(`Question ${index + 1}: Question cannot be empty`);
     }
 
-    if (!question.matching_questions || !Array.isArray(question.matching_questions)) {
-      throw new Error(`Question ${index + 1}: matching_questions must be an array`);
-    }
-
-    if (!question.matching_answers || !Array.isArray(question.matching_answers)) {
-      throw new Error(`Question ${index + 1}: matching_answers must be an array`);
+    if (!Array.isArray(question.matching_questions) || !Array.isArray(question.matching_answers)) {
+      throw new Error(`Question ${index + 1}: matching_questions and matching_answers must be arrays`);
     }
 
     if (question.matching_questions.length !== question.matching_answers.length) {
-      throw new Error(`Question ${index + 1}: matching_questions and matching_answers must have the same length`);
+      throw new Error(`Question ${index + 1}: Mismatched array lengths`);
     }
 
-    // Check for duplicate items in Column A or B
-    const columnAItems = question.matching_questions.map(pair => pair.A);
-    const columnBItems = question.matching_questions.map(pair => pair.B);
+    // Check for duplicates and overly long items
+    const getKeys = (pairs: any[]) => pairs.map(pair => Object.keys(pair)).flat();
+    const getValues = (pairs: any[]) => pairs.map(pair => Object.values(pair)).flat();
     
-    const uniqueAItems = new Set(columnAItems);
-    const uniqueBItems = new Set(columnBItems);
+    const allKeys = getKeys(question.matching_questions);
+    const allValues = getValues(question.matching_questions);
     
-    if (uniqueAItems.size !== columnAItems.length) {
-      console.warn(`Question ${index + 1}: Duplicate items found in Column A`);
+    if (new Set(allKeys).size !== allKeys.length) {
+      console.warn(`Question ${index + 1}: Duplicate keys found`);
     }
     
-    if (uniqueBItems.size !== columnBItems.length) {
-      console.warn(`Question ${index + 1}: Duplicate items found in Column B`);
+    if (new Set(allValues).size !== allValues.length) {
+      console.warn(`Question ${index + 1}: Duplicate values found`);
     }
 
-    // Check for overly long items that might be hard to match
-    question.matching_questions.forEach((pair, pairIndex) => {
-      if (pair.A.split(/\s+/).length > 15) {
-        console.warn(`Question ${index + 1}, Pair ${pairIndex + 1}: Column A item is very long - consider shortening`);
-      }
-      if (pair.B.split(/\s+/).length > 15) {
-        console.warn(`Question ${index + 1}, Pair ${pairIndex + 1}: Column B item is very long - consider shortening`);
+    // Warn about long items
+    allValues.forEach((value, i) => {
+      if (typeof value === 'string' && value.split(/\s+/).length > 15) {
+        console.warn(`Question ${index + 1}: Item ${i + 1} is very long - consider shortening`);
       }
     });
   });
@@ -243,19 +190,10 @@ export function validateMatchingQuestions(questions: Question[]): void {
 export function analyzeMatchingComplexity(questions: Question[]): {
   totalQuestions: number;
   averagePairsPerQuestion: number;
-  pairDistribution: {
-    few: number; // 3-4 pairs
-    moderate: number; // 5-7 pairs
-    many: number; // 8+ pairs
-  };
-  averageItemLength: {
-    columnA: number;
-    columnB: number;
-  };
+  pairDistribution: { few: number; moderate: number; many: number };
+  averageItemLength: { columnA: number; columnB: number };
 } {
-  const totalQuestions = questions.length;
-  
-  if (totalQuestions === 0) {
+  if (questions.length === 0) {
     return {
       totalQuestions: 0,
       averagePairsPerQuestion: 0,
@@ -265,41 +203,35 @@ export function analyzeMatchingComplexity(questions: Question[]): {
   }
 
   const pairCounts = questions.map(q => q.matching_questions?.length || 0);
-  const averagePairsPerQuestion = Math.round((pairCounts.reduce((sum, count) => sum + count, 0) / totalQuestions) * 100) / 100;
+  const averagePairsPerQuestion = Math.round((pairCounts.reduce((sum, count) => sum + count, 0) / questions.length) * 100) / 100;
 
-  const few = pairCounts.filter(count => count >= 3 && count <= 4).length;
-  const moderate = pairCounts.filter(count => count >= 5 && count <= 7).length;
-  const many = pairCounts.filter(count => count >= 8).length;
+  const pairDistribution = {
+    few: pairCounts.filter(count => count >= 3 && count <= 4).length,
+    moderate: pairCounts.filter(count => count >= 5 && count <= 7).length,
+    many: pairCounts.filter(count => count >= 8).length
+  };
 
   // Calculate average item lengths
-  let totalALength = 0;
-  let totalBLength = 0;
-  let totalPairs = 0;
+  let totalALength = 0, totalBLength = 0, totalPairs = 0;
 
   questions.forEach(q => {
-    if (q.matching_questions) {
-      q.matching_questions.forEach(pair => {
-        totalALength += pair.A.split(/\s+/).length;
-        totalBLength += pair.B.split(/\s+/).length;
+    q.matching_questions?.forEach(pair => {
+      const values = Object.values(pair);
+      if (values.length >= 2) {
+        totalALength += String(values[0]).split(/\s+/).length;
+        totalBLength += String(values[1]).split(/\s+/).length;
         totalPairs++;
-      });
-    }
+      }
+    });
   });
 
-  const averageALength = totalPairs > 0 ? Math.round((totalALength / totalPairs) * 100) / 100 : 0;
-  const averageBLength = totalPairs > 0 ? Math.round((totalBLength / totalPairs) * 100) / 100 : 0;
-
   return {
-    totalQuestions,
+    totalQuestions: questions.length,
     averagePairsPerQuestion,
-    pairDistribution: {
-      few,
-      moderate,
-      many
-    },
+    pairDistribution,
     averageItemLength: {
-      columnA: averageALength,
-      columnB: averageBLength
+      columnA: totalPairs > 0 ? Math.round((totalALength / totalPairs) * 100) / 100 : 0,
+      columnB: totalPairs > 0 ? Math.round((totalBLength / totalPairs) * 100) / 100 : 0
     }
   };
 }
@@ -308,10 +240,10 @@ export function formatMatchingForDisplay(question: Question): {
   question: string;
   columnA: string[];
   columnB: string[];
-  correctMatches: { A: string; B: string }[];
+  correctMatches: { [key: string]: string }[];
 } {
-  const columnA = question.matching_questions?.map(pair => pair.A) || [];
-  const columnB = question.matching_questions?.map(pair => pair.B) || [];
+  const columnA = question.matching_questions?.map(pair => Object.values(pair)[0] as string) || [];
+  const columnB = question.matching_questions?.map(pair => Object.values(pair)[1] as string) || [];
   const correctMatches = question.matching_answers || [];
 
   return {
@@ -323,52 +255,173 @@ export function formatMatchingForDisplay(question: Question): {
 }
 
 export function checkMatchingAnswers(
-  userMatches: { A: string; B: string }[], 
-  correctMatches: { A: string; B: string }[]
+  userMatches: { [key: string]: string }[], 
+  correctMatches: { [key: string]: string }[]
 ): {
   totalPairs: number;
   correctPairs: number;
   incorrectPairs: number;
   score: number;
   details: {
-    correct: { A: string; B: string }[];
-    incorrect: { A: string; B: string; correctB: string }[];
+    correct: { columnA: string; columnB: string; userColumnB: string }[];
+    incorrect: { columnA: string; correctColumnB: string; userColumnB: string }[];
   };
 } {
   const totalPairs = correctMatches.length;
-  const correct: { A: string; B: string }[] = [];
-  const incorrect: { A: string; B: string; correctB: string }[] = [];
+  const correct: { columnA: string; columnB: string; userColumnB: string }[] = [];
+  const incorrect: { columnA: string; correctColumnB: string; userColumnB: string }[] = [];
 
-  userMatches.forEach(userMatch => {
-    const correctMatch = correctMatches.find(cm => cm.A === userMatch.A);
+  // Create lookup maps for easier comparison
+  const correctAnswerMap = new Map<string, string>();
+  correctMatches.forEach(pair => {
+    const entries = Object.entries(pair);
+    if (entries.length >= 2) {
+      // Map Column A value to Column B value
+      correctAnswerMap.set(entries[0][1], entries[1][1]);
+    }
+  });
+
+  const userAnswerMap = new Map<string, string>();
+  userMatches.forEach(pair => {
+    const entries = Object.entries(pair);
+    if (entries.length >= 2) {
+      // Map Column A value to Column B value
+      userAnswerMap.set(entries[0][1], entries[1][1]);
+    }
+  });
+
+  // Compare user answers with correct answers
+  correctAnswerMap.forEach((correctColumnB, columnA) => {
+    const userColumnB = userAnswerMap.get(columnA);
     
-    if (correctMatch && correctMatch.B === userMatch.B) {
-      correct.push(userMatch);
+    if (userColumnB === correctColumnB) {
+      correct.push({
+        columnA,
+        columnB: correctColumnB,
+        userColumnB
+      });
     } else {
       incorrect.push({
-        A: userMatch.A,
-        B: userMatch.B,
-        correctB: correctMatch?.B || 'Unknown'
+        columnA,
+        correctColumnB,
+        userColumnB: userColumnB || 'Not answered'
       });
     }
   });
 
-  const correctPairs = correct.length;
-  const incorrectPairs = incorrect.length;
-  const score = totalPairs > 0 ? Math.round((correctPairs / totalPairs) * 10000) / 100 : 0;
+  const score = totalPairs > 0 ? Math.round((correct.length / totalPairs) * 10000) / 100 : 0;
 
   return {
     totalPairs,
-    correctPairs,
-    incorrectPairs,
+    correctPairs: correct.length,
+    incorrectPairs: incorrect.length,
     score,
-    details: {
-      correct,
-      incorrect
-    }
+    details: { correct, incorrect }
   };
 }
 
+// Helper function to verify matching question integrity
+export function verifyMatchingIntegrity(question: Question): {
+  isValid: boolean;
+  issues: string[];
+  suggestions: string[];
+} {
+  const issues: string[] = [];
+  const suggestions: string[] = [];
+
+  if (!question.matching_questions || !question.matching_answers) {
+    issues.push('Missing matching_questions or matching_answers');
+    return { isValid: false, issues, suggestions };
+  }
+
+  // Check if arrays are identical (the main issue we're fixing)
+  const questionsStr = JSON.stringify(question.matching_questions);
+  const answersStr = JSON.stringify(question.matching_answers);
+  
+  if (questionsStr === answersStr) {
+    issues.push('matching_questions and matching_answers are identical - no shuffling detected');
+    suggestions.push('Column B should be shuffled in matching_questions to create a proper matching exercise');
+  }
+
+  // Check Column A consistency
+  const questionColumnA = question.matching_questions.map(pair => Object.entries(pair)[0][1]);
+  const answerColumnA = question.matching_answers.map(pair => Object.entries(pair)[0][1]);
+  
+  if (JSON.stringify(questionColumnA.sort()) !== JSON.stringify(answerColumnA.sort())) {
+    issues.push('Column A items differ between matching_questions and matching_answers');
+    suggestions.push('Column A should contain the same items in both arrays');
+  }
+
+  // Check Column B completeness
+  const questionColumnB = question.matching_questions.map(pair => Object.entries(pair)[1][1]);
+  const answerColumnB = question.matching_answers.map(pair => Object.entries(pair)[1][1]);
+  
+  if (JSON.stringify(questionColumnB.sort()) !== JSON.stringify(answerColumnB.sort())) {
+    issues.push('Column B items differ between arrays');
+    suggestions.push('Column B should contain the same items in both arrays but in different order');
+  }
+
+  // Check for duplicates
+  const uniqueColumnA = new Set(questionColumnA);
+  const uniqueColumnB = new Set(questionColumnB);
+  
+  if (uniqueColumnA.size !== questionColumnA.length) {
+    issues.push('Duplicate items found in Column A');
+    suggestions.push('Each Column A item should be unique');
+  }
+  
+  if (uniqueColumnB.size !== questionColumnB.length) {
+    issues.push('Duplicate items found in Column B');
+    suggestions.push('Each Column B item should be unique');
+  }
+
+  // Performance suggestions
+  if (question.matching_questions.length > 8) {
+    suggestions.push('Consider reducing pairs to 6-8 for better usability');
+  }
+  
+  if (question.matching_questions.length < 4) {
+    suggestions.push('Consider adding more pairs (4-6 is optimal)');
+  }
+
+  return {
+    isValid: issues.length === 0,
+    issues,
+    suggestions
+  };
+}
+
+export function shuffleMatchingItems(question: Question): Question {
+  if (!question.matching_questions?.length) {
+    return question;
+  }
+
+  // Get all second values (Column B) and shuffle them
+  const columnBItems = question.matching_questions.map(pair => Object.values(pair)[1]);
+  
+  // Fisher-Yates shuffle
+  for (let i = columnBItems.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [columnBItems[i], columnBItems[j]] = [columnBItems[j], columnBItems[i]];
+  }
+
+  // Rebuild pairs with shuffled Column B
+  const shuffledMatchingQuestions = question.matching_questions.map((pair, index) => {
+    const entries = Object.entries(pair);
+    return {
+      [entries[0][0]]: entries[0][1], // Keep Column A key and value
+      [entries[1][0]]: columnBItems[index] // Keep Column B key, use shuffled value
+    };
+  });
+
+  return {
+    ...question,
+    matching_questions: shuffledMatchingQuestions
+    // matching_answers remains unchanged as it contains correct matches
+  };
+}
+
+// Utility functions
 export function convertToMatchingResponse(questions: Question[]): MatchingQuestionResponse[] {
   return questions.map(q => ({
     question: q.question,
@@ -376,32 +429,6 @@ export function convertToMatchingResponse(questions: Question[]): MatchingQuesti
     matching_answers: q.matching_answers || [],
     explanation: q.explanation
   }));
-}
-
-export function shuffleMatchingItems(question: Question): Question {
-  if (!question.matching_questions || !question.matching_answers) {
-    return question;
-  }
-
-  // Shuffle Column B items while keeping Column A in order
-  const shuffledBItems = [...question.matching_questions.map(pair => pair.B)];
-  
-  // Fisher-Yates shuffle
-  for (let i = shuffledBItems.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledBItems[i], shuffledBItems[j]] = [shuffledBItems[j], shuffledBItems[i]];
-  }
-
-  const shuffledMatchingQuestions = question.matching_questions.map((pair, index) => ({
-    A: pair.A,
-    B: shuffledBItems[index]
-  }));
-
-  return {
-    ...question,
-    matching_questions: shuffledMatchingQuestions
-    // matching_answers remains the same as it contains the correct matches
-  };
 }
 
 export { parseMatchingResponse as parseResponse };

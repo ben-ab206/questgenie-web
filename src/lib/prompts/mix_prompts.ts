@@ -1,10 +1,11 @@
-import { Language, DifficultyLevel, BloomLevel, MCQConfig, ShortAnswerConfig, TrueFalseConfig, FillInBlankConfig, LongAnswerConfig, MatchingQuestionConfig, QuestionType } from "@/types/questions";
-import { buildMCQPrompt } from "./mcq_prompts";
+import { Language, DifficultyLevel, BloomLevel, SCQConfig, ShortAnswerConfig, TrueFalseConfig, FillInBlankConfig, LongAnswerConfig, MatchingQuestionConfig, QuestionType, MCQConfig } from "@/types/questions";
+import { buildSCQPrompt } from "./scq_prompts";
 import { buildShortAnswerPrompt } from "./short_answer_prompts";
 import { buildTrueFalsePrompt } from "./tf_prompts";
 import { buildFillInBlankPrompt } from "./fill_in_blanks_prompts";
 import { buildLongAnswerPrompt } from "./long_answer_prompts";
 import { buildMatchingQuestionPrompt } from "./matching_prompts";
+import { buildMCQPrompt } from "./mcq_prompts";
 
 interface RandomQuestionConfig {
   questionTypes: QuestionType[];
@@ -97,6 +98,17 @@ function buildPromptForType(
 //   MATCHING = 'matching',
 
   switch (questionType) {
+    case 'single_choice':
+      const scqConfig: SCQConfig = {
+        language,
+        difficulty,
+        bloom_level: bloomLevel,
+        quantity,
+        content,
+        optionsCount: 4
+      };
+      return buildSCQPrompt(scqConfig);
+
     case 'multiple_choice':
       const mcqConfig: MCQConfig = {
         language,

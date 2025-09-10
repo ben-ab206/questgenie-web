@@ -1,9 +1,9 @@
 import { OpenRouterClient } from './openrouter';
 import { GenerationResult, QuestionConfig, QuestionType } from '@/types/questions';
 import { validateQuestionConfig } from '@/lib/validation';
-import { calculateProcessingTime, delay, generateContentHash } from '@/lib/utils';
-import { buildMCQPrompt } from '@/lib/prompts/mcq_prompts';
-import { parseMCQResponse } from '@/lib/parsers/parser_mcq';
+import { calculateProcessingTime, generateContentHash } from '@/lib/utils';
+import { buildSCQPrompt } from '@/lib/prompts/scq_prompts';
+import { parseSCQResponse } from '@/lib/parsers/parser_scq';
 import { buildTrueFalsePrompt } from '@/lib/prompts/tf_prompts';
 import { parseTrueFalseResponse } from '@/lib/parsers/parser_truefalse';
 import { buildFillInBlankPrompt } from '@/lib/prompts/fill_in_blanks_prompts';
@@ -15,6 +15,8 @@ import { parseLongAnswerResponse } from '@/lib/parsers/parser_longAnswer';
 import { buildMatchingQuestionPrompt } from '@/lib/prompts/matching_prompts';
 import { parseMatchingResponse } from '@/lib/parsers/parser_matchings';
 import { generateRandomQuestionPromptMix } from '@/lib/prompts/mix_prompts';
+import { buildMCQPrompt } from '@/lib/prompts/mcq_prompts';
+import { parseMCQResponse } from '@/lib/parsers/parser_mcq';
 
 export class QuestionGenerator {
   private openRouterClient: OpenRouterClient;
@@ -25,15 +27,15 @@ export class QuestionGenerator {
     this.model = model;
   }
 
-  async generateMCQQuestions(config: QuestionConfig): Promise<GenerationResult> {
+  async generateSCQQuestions(config: QuestionConfig): Promise<GenerationResult> {
     const startTime = Date.now();
 
     try {
       validateQuestionConfig(config);
       
-      const prompt = buildMCQPrompt(config);
+      const prompt = buildSCQPrompt(config);
       const response = await this.openRouterClient.generateResponse(prompt);
-      const questions = parseMCQResponse(response, config);
+      const questions = parseSCQResponse(response, config);
 
       return {
         success: true,
@@ -263,6 +265,9 @@ export class QuestionGenerator {
           case QuestionType.MULTIPLE_CHOICE:
             parsedQuestions = parseMCQResponse(response, config);
             break;
+          case QuestionType.SINGLE_CHOICE:
+            parsedQuestions = parseSCQResponse(response, config);
+            break;
           case QuestionType.SHORT_ANSWER:
             parsedQuestions = parseShortAnswerResponse(response, config);
             break;
@@ -279,6 +284,41 @@ export class QuestionGenerator {
           questions.push(parsedQuestions);
         }
       }
+
+      return {
+        success: true,
+        questions,
+        contentHash: generateContentHash(config.content),
+        metadata: {
+          generatedAt: new Date(),
+          model: this.model,
+          processingTimeMs: calculateProcessingTime(startTime)
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        questions: [],
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        metadata: {
+          generatedAt: new Date(),
+          model: this.model,
+          processingTimeMs: calculateProcessingTime(startTime)
+        }
+      };
+    }
+  }
+
+
+  async generateMCQQuestions(config: QuestionConfig): Promise<GenerationResult> {
+    const startTime = Date.now();
+
+    try {
+      validateQuestionConfig(config);
+      
+      const prompt = buildMCQPrompt(config);
+      const response = await this.openRouterClient.generateResponse(prompt);
+      const questions = parseMCQResponse(response, config);
 
       return {
         success: true,

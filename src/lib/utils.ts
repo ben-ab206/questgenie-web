@@ -166,7 +166,7 @@ export const exportQuestionsToCSV = (questions: Question[], filename = 'question
         question.difficulty,
         question.language,
         escapeCSVField(question.question),
-        escapeCSVField(question.answer),
+        escapeCSVField(question.answer ?? ""),
         escapeCSVField(question.options?.A || ''),
         escapeCSVField(question.options?.B || ''),
         escapeCSVField(question.options?.C || ''),
@@ -334,12 +334,12 @@ const escapeCSVField = (field: string): string => {
   return field;
 };
 
-const formatMatchingQuestions = (matchingQuestions?: { A: string; B: string }[]): string => {
+const formatMatchingQuestions = (matchingQuestions?: { [key: string]: string;  }[]): string => {
   if (!matchingQuestions) return '';
   return matchingQuestions.map(item => `${item.A} -> ${item.B}`).join('; ');
 };
 
-const formatMatchingAnswers = (matchingAnswers?: { A: string; B: string }[]): string => {
+const formatMatchingAnswers = (matchingAnswers?: { [key: string]: string;  }[]): string => {
   if (!matchingAnswers) return '';
   return matchingAnswers.map(item => `${item.A} -> ${item.B}`).join('; ');
 };

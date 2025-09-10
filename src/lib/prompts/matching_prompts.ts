@@ -1,224 +1,100 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { QuestionConfig, Language, DifficultyLevel, MatchingQuestionConfig, MatchingQuestionResponse } from "@/types/questions";
 
 export function buildMatchingQuestionPrompt(config: MatchingQuestionConfig): string {
-  const languageInstruction = getMatchingLanguageInstruction(config.language);
-  const difficultyInstruction = getMatchingDifficultyInstruction(config.difficulty);
-  const typeInstruction = getMatchingTypeInstruction(config.matchingType);
-  const qualityInstructions = getMatchingQualityInstructions(config);
+  const languageInstruction = getLanguageInstruction(config.language);
+  const difficultyInstruction = getDifficultyInstruction(config.difficulty);
+  const typeInstruction = getTypeInstruction(config.matchingType);
 
   return `${languageInstruction}
 
-TASK: Generate Matching Questions
+Generate ${config.quantity} matching question(s) based on the content below.
+
 ${difficultyInstruction}
 ${typeInstruction}
 
-MATCHING QUESTION SPECIFIC REQUIREMENTS:
-1. Create exactly ${config.quantity} matching question(s)
-2. Each question must have items in Column A that correspond to items in Column B
-3. Base ALL questions and answers strictly on the provided content below
-4. Do not use external knowledge beyond the given content
-5. Create meaningful connections between Column A and Column B items
-6. Ensure all matches have clear, logical relationships
-7. Include 4-8 matching pairs per question (optimal is 5-6 pairs)
-8. Avoid obvious or trivial matches - require understanding of content
+Requirements:
+- Create 4-6 matching pairs per question
+- Base answers strictly on provided content
+- Ensure clear, logical relationships
+- No ambiguous matches
 
-${qualityInstructions}
-
-CONTENT TO ANALYZE:
+Content:
 """
 ${config.content}
 """
 
-OUTPUT FORMAT (JSON array only, no additional text):
+Output JSON array only:
 [
   {
-    "question": "Clear instruction for the matching task",
+    "question": "Match items in Column A with Column B",
     "matching_questions": [
-      { "A": "Item from Column A", "B": "Corresponding item from Column B" },
-      { "A": "Item from Column A", "B": "Corresponding item from Column B" },
-      { "A": "Item from Column A", "B": "Corresponding item from Column B" },
-      { "A": "Item from Column A", "B": "Corresponding item from Column B" },
-      { "A": "Item from Column A", "B": "Corresponding item from Column B" }
+      {"1": "Column A item 1", "A": "Column B item (shuffled)"},
+      {"2": "Column A item 2", "B": "Column B item (shuffled)"},
+      {"3": "Column A item 3", "C": "Column B item (shuffled)"}
     ],
     "matching_answers": [
-      { "A": "Item from Column A", "B": "Corresponding item from Column B" },
-      { "A": "Item from Column A", "B": "Corresponding item from Column B" },
-      { "A": "Item from Column A", "B": "Corresponding item from Column B" },
-      { "A": "Item from Column A", "B": "Corresponding item from Column B" },
-      { "A": "Item from Column A", "B": "Corresponding item from Column B" }
-    ],
-    ${config.difficulty === DifficultyLevel.HIGH ? '"explanation": "Brief explanation of the matching relationships and key concepts",' : ''}
+      {"1": "Column A item 1", "C": "Correct Column B item"},
+      {"2": "Column A item 2", "A": "Correct Column B item"},  
+      {"3": "Column A item 3", "B": "Correct Column B item"}
+    ]${config.difficulty === DifficultyLevel.HIGH ? ',\n    "explanation": "Brief explanation"' : ''}
   }
-]`;
+]
+
+IMPORTANT: 
+- matching_questions: Show Column A items with Column B items in RANDOM order (shuffled)
+- matching_answers: Show the CORRECT pairings between Column A and Column B
+- Column B items in matching_questions should be shuffled/randomized
+- Column B keys in matching_answers should match the correct Column B items from matching_questions`;
 }
 
-function getMatchingLanguageInstruction(language: Language): string {
-  const instructions = {
-    [Language.BURMESE]: 'Generate all Matching questions, items, titles, and explanations in Burmese (Myanmar) language using proper Burmese script and grammar.',
-    [Language.ENGLISH]: 'Generate all Matching questions, items, titles, and explanations in clear, proper English.',
-  };
-
-  return instructions[language] || instructions[Language.ENGLISH];
+function getLanguageInstruction(language: Language): string {
+  return language === Language.BURMESE 
+    ? 'Generate in Burmese language using proper Myanmar script.'
+    : 'Generate in clear English.';
 }
 
-function getMatchingDifficultyInstruction(difficulty: DifficultyLevel): string {
+function getDifficultyInstruction(difficulty: DifficultyLevel): string {
   const instructions = {
-    [DifficultyLevel.EASY]: `DIFFICULTY: EASY
-- Create straightforward, direct relationships between items
-- Focus on basic concepts, definitions, and simple associations
-- Use clear, obvious connections that test fundamental understanding
-- Column A might contain: terms, names, basic concepts
-- Column B might contain: simple definitions, direct descriptions, basic facts
-- Relationships should be one-to-one and unambiguous`,
-
-    [DifficultyLevel.MEDIUM]: `DIFFICULTY: MEDIUM
-- Create relationships requiring deeper understanding of concepts
-- Include cause-and-effect relationships, processes, and applications
-- Test comprehension of relationships between different elements
-- Column A might contain: concepts, processes, causes, categories
-- Column B might contain: effects, results, examples, characteristics
-- Some relationships may require analysis or synthesis of information`,
-
-    [DifficultyLevel.HIGH]: `DIFFICULTY: HIGH
-- Create complex relationships requiring critical thinking and analysis
-- Include abstract concepts, theoretical connections, and nuanced relationships
-- Test sophisticated understanding of interconnections and implications
-- Column A might contain: complex theories, abstract principles, advanced concepts
-- Column B might contain: applications, implications, complex examples, theoretical outcomes
-- Relationships should require deep understanding and may involve multiple layers of connection`,
-
-[DifficultyLevel.MIXED]: `DIFFICULTY: MIXED
-- Combine questions from all difficulty levels (Easy, Medium, High)
-- Start with easier recall questions to build confidence
-- Progress to medium-level conceptual understanding questions
-- Include some challenging synthesis and analysis questions
-- Ensure balanced coverage: ~40% Easy, ~40% Medium, ~20% High
-- Create a natural learning progression from basic to advanced concepts`
+    [DifficultyLevel.EASY]: 'EASY: Direct definitions and basic facts',
+    [DifficultyLevel.MEDIUM]: 'MEDIUM: Conceptual relationships and applications', 
+    [DifficultyLevel.HIGH]: 'HIGH: Complex analysis requiring deep understanding',
+    [DifficultyLevel.MIXED]: 'MIXED: Combine easy (40%), medium (40%), hard (20%)'
   };
-
   return instructions[difficulty];
 }
 
-function getMatchingTypeInstruction(matchingType?: MatchingQuestionConfig['matchingType']): string {
+function getTypeInstruction(matchingType?: MatchingQuestionConfig['matchingType']): string {
   const instructions = {
-    'definition': `MATCHING TYPE: DEFINITION
-- Column A: Terms, concepts, vocabulary words
-- Column B: Definitions, explanations, descriptions
-- Focus on terminology and conceptual understanding`,
-
-    'concept': `MATCHING TYPE: CONCEPT
-- Column A: Concepts, theories, principles
-- Column B: Examples, applications, illustrations
-- Focus on understanding how concepts apply in practice`,
-
-    'cause-effect': `MATCHING TYPE: CAUSE-EFFECT
-- Column A: Causes, triggers, conditions
-- Column B: Effects, results, outcomes, consequences
-- Focus on understanding causal relationships`,
-
-    'process': `MATCHING TYPE: PROCESS
-- Column A: Process steps, stages, phases
-- Column B: Descriptions, outcomes, characteristics of each step
-- Focus on understanding sequential relationships and processes`,
-
-    'classification': `MATCHING TYPE: CLASSIFICATION
-- Column A: Categories, groups, classifications
-- Column B: Examples, members, characteristics
-- Focus on understanding how items belong to different groups`,
-
-    'general': `MATCHING TYPE: GENERAL
-- Create varied relationships based on content analysis
-- Mix different types of connections as appropriate
-- Focus on the most important relationships in the content`
+    'definition': 'Match terms with definitions',
+    'concept': 'Match concepts with examples/applications',
+    'cause-effect': 'Match causes with effects/outcomes',
+    'process': 'Match process steps with descriptions',
+    'classification': 'Match categories with examples',
+    'general': 'Create varied meaningful relationships'
   };
-
   return instructions[matchingType || 'general'];
 }
 
-function getMatchingQualityInstructions(config: MatchingQuestionConfig): string {
-  let instructions = `QUALITY STANDARDS:`;
-
-  instructions += `
-- Ensure all items in both columns are directly related to the provided content
-- Create balanced difficulty across all matching pairs within each question
-- Avoid ambiguous matches - each item should have one clear, correct match`;
-
-  instructions += `
-- Make Column A and Column B items roughly equal in length and complexity
-- Ensure no item appears twice in the same column
-- Create items that are parallel in structure and format`;
-
-  instructions += `
-- Test meaningful relationships that demonstrate understanding
-- Avoid trivial or obvious connections that don't assess learning
-- Focus on the most important concepts and relationships in the content`;
-
-  instructions += `
-- Write clear, unambiguous items that can't be misinterpreted
-- Use consistent terminology throughout the matching question
-- Ensure all matches are factually correct based on the provided content`;
-
-  if (config.topic) {
-    instructions += `
-- Focus specifically on relationships related to: ${config.topic}
-- Prioritize the most important aspects of this topic area`;
-  }
-
-  instructions += `
-- Include 4-8 matching pairs per question (5-6 is optimal)
-- Vary the order of items to prevent pattern matching
-- Ensure the matching_answers array exactly corresponds to the matching_questions array
-- For high difficulty questions, include explanations of the key relationships`;
-
-  return instructions;
-}
-
-// Simplified version for basic matching question generation
+// Simplified builders
 export function buildSimpleMatchingPrompt(
   content: string,
   quantity: number = 2,
   language: Language = Language.ENGLISH,
   difficulty: DifficultyLevel = DifficultyLevel.MEDIUM
 ): string {
-  const config: MatchingQuestionConfig = {
-    language,
-    difficulty,
-    quantity,
-    content
-  };
-
-  return buildMatchingQuestionPrompt(config);
+  return buildMatchingQuestionPrompt({ language, difficulty, quantity, content });
 }
 
-// Export for backward compatibility with existing QuestionConfig
-export function buildMatchingFromQuestionConfig(config: QuestionConfig): string {
-  const matchingConfig: MatchingQuestionConfig = {
-    language: config.language,
-    difficulty: config.difficulty,
-    quantity: config.quantity,
-    content: config.content,
-    topic: config.topic
-  };
-
-  return buildMatchingQuestionPrompt(matchingConfig);
-}
-
-// Specialized matching question types
 export function buildDefinitionMatchingPrompt(
   content: string,
   quantity: number = 2,
   language: Language = Language.ENGLISH,
   difficulty: DifficultyLevel = DifficultyLevel.MEDIUM
 ): string {
-  const config: MatchingQuestionConfig = {
-    language,
-    difficulty,
-    quantity,
-    content,
-    matchingType: 'definition'
-  };
-
-  return buildMatchingQuestionPrompt(config);
+  return buildMatchingQuestionPrompt({ 
+    language, difficulty, quantity, content, matchingType: 'definition' 
+  });
 }
 
 export function buildCauseEffectMatchingPrompt(
@@ -227,15 +103,9 @@ export function buildCauseEffectMatchingPrompt(
   language: Language = Language.ENGLISH,
   difficulty: DifficultyLevel = DifficultyLevel.MEDIUM
 ): string {
-  const config: MatchingQuestionConfig = {
-    language,
-    difficulty,
-    quantity,
-    content,
-    matchingType: 'cause-effect'
-  };
-
-  return buildMatchingQuestionPrompt(config);
+  return buildMatchingQuestionPrompt({ 
+    language, difficulty, quantity, content, matchingType: 'cause-effect' 
+  });
 }
 
 export function buildConceptMatchingPrompt(
@@ -244,15 +114,9 @@ export function buildConceptMatchingPrompt(
   language: Language = Language.ENGLISH,
   difficulty: DifficultyLevel = DifficultyLevel.MEDIUM
 ): string {
-  const config: MatchingQuestionConfig = {
-    language,
-    difficulty,
-    quantity,
-    content,
-    matchingType: 'concept'
-  };
-
-  return buildMatchingQuestionPrompt(config);
+  return buildMatchingQuestionPrompt({ 
+    language, difficulty, quantity, content, matchingType: 'concept' 
+  });
 }
 
 // Validation functions
@@ -265,32 +129,25 @@ export function validateMatchingResponse(response: any): response is MatchingQue
     Array.isArray(response.matching_answers) &&
     response.matching_questions.length === response.matching_answers.length &&
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    response.matching_questions.every((item: any) => 
-      typeof item.A === 'string' && typeof item.B === 'string'
-    ) &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    response.matching_answers.every((item: any) => 
-      typeof item.A === 'string' && typeof item.B === 'string'
-    )
+    response.matching_questions.every((item: any) => typeof item === 'object') &&
+    response.matching_answers.every((item: any) => typeof item === 'object')
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateMatchingResponses(responses: any[]): MatchingQuestionResponse[] {
   if (!Array.isArray(responses)) {
-    throw new Error('Response must be an array of Matching questions');
+    throw new Error('Response must be an array of matching questions');
   }
 
   const validResponses = responses.filter(validateMatchingResponse);
   
   if (validResponses.length !== responses.length) {
-    throw new Error('Some Matching responses are invalid or malformed');
+    throw new Error('Some matching responses are invalid');
   }
 
   return validResponses;
 }
 
-// Utility function to check if matching answers correspond to questions
 export function validateMatchingCorrespondence(response: MatchingQuestionResponse): boolean {
   const questionPairs = response.matching_questions;
   const answerPairs = response.matching_answers;
@@ -299,10 +156,13 @@ export function validateMatchingCorrespondence(response: MatchingQuestionRespons
     return false;
   }
 
-  // Check if all answer pairs exist in question pairs
-  return answerPairs.every(answer => 
-    questionPairs.some(question => 
-      question.A === answer.A && question.B === answer.B
-    )
+  return answerPairs.every(answer =>
+    questionPairs.some(question => {
+      const qEntries = Object.entries(question);
+      const aEntries = Object.entries(answer);
+      return qEntries.length === 2 && aEntries.length === 2 &&
+             qEntries[0][0] === aEntries[0][0] && qEntries[0][1] === aEntries[0][1] &&
+             qEntries[1][0] === aEntries[1][0] && qEntries[1][1] === aEntries[1][1];
+    })
   );
 }

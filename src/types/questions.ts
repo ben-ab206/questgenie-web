@@ -20,32 +20,23 @@ export interface GenerateQuestionConfig {
   topic?: string;
 }
 
-export interface MCQOption {
-  A: string;
-  B: string;
-  C: string;
-  D: string;
-  E?: string;
-}
-
 export interface Question {
   id?: number;
   type: QuestionType;
   difficulty: DifficultyLevel;
   language: Language;
   question: string;
-  answer: string;
-  options?: MCQOption; // mcq
+  answer?: string;
+  options?: Options; // mcq | scq
   explanation?: string;
   matching_questions?: {
-    A: string
-    B: string
+    [key: string]: string;
   }[],
   matching_answers?: {
-    A: string
-    B: string
+    [key: string]: string;
   }[],
   bloom_level: BloomLevel;
+  mcq_answers?: (keyof Options)[]
 }
 
 export interface GenerationResult {
@@ -87,12 +78,13 @@ export interface APIResponse<T> {
 }
 
 export enum QuestionType {
-  MULTIPLE_CHOICE = 'multiple_choice',
+  SINGLE_CHOICE = 'single_choice',
   TRUE_FALSE = 'true_false',
   FILL_IN_THE_BLANK = 'fill_in_the_blank',
   SHORT_ANSWER = 'short_answer',
   LONG_ANSWER = 'long_answer',
   MATCHING = 'matching',
+  MULTIPLE_CHOICE = 'multiple_choice',
   //   ORDERING = 'ordering'
 }
 
@@ -126,6 +118,16 @@ export interface OpenRouterConfig {
   maxRetries?: number;
 }
 
+export interface SCQConfig {
+  language: Language;
+  difficulty: DifficultyLevel;
+  bloom_level: BloomLevel;
+  topic?: string;
+  quantity: number;
+  content: string;
+  optionsCount?: 4 | 5;
+}
+
 export interface MCQConfig {
   language: Language;
   difficulty: DifficultyLevel;
@@ -137,16 +139,26 @@ export interface MCQConfig {
 }
 
 
+export type Options = {
+  A: string;
+  B: string;
+  C: string;
+  D: string;
+  E?: string;
+};
+
+export interface SCQResponse {
+  question: string;
+  options: Options;
+  correctAnswer: keyof Options; 
+  contentReference?: string;
+  explanation?: string;
+}
+
 export interface MCQResponse {
   question: string;
-  options: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-    E?: string;
-  };
-  correctAnswer: 'A' | 'B' | 'C' | 'D' | 'E';
+  options: Options;
+  correctAnswer: (keyof Options)[];
   contentReference?: string;
   explanation?: string;
 }
@@ -225,12 +237,10 @@ export interface MatchingQuestionConfig {
 export interface MatchingQuestionResponse {
   question: string;
   matching_questions: {
-    A: string;
-    B: string;
+    [key: string]: string;
   }[];
   matching_answers: {
-    A: string;
-    B: string;
+    [key: string]: string;
   }[];
   explanation?: string;
 }
@@ -245,21 +255,14 @@ export interface QuestionBank {
   language: string;
   type: string;
   bloom_level?: string;
-  options?: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-    E?: string;
-  },
+  options?: Options,
   explanation?: string;
   matching_questions?: {
-    A: string;
-    B: string;
+    [key: string]: string;
   }[],
   matching_answers?: {
-    A: string;
-    B: string;
+    [key: string]: string;
   }[];
+  mcq_answers?: (keyof Options)[];
   subjects?: Subjects
 }
