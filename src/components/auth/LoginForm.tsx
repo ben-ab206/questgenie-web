@@ -7,9 +7,10 @@ import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { login } from '@/services/auth'
+import { login, signInWithoutPassword } from '@/services/auth'
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Image from "next/image"
 import {
   Form,
   FormControl,
@@ -19,6 +20,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
+import { Card, CardContent } from '../ui/card'
+import { useTemp } from '@/context/temp-context'
 
 // Zod validation schema
 const loginSchema = z.object({
@@ -26,123 +29,116 @@ const loginSchema = z.object({
     .string()
     .min(1, "Email is required")
     .email("Please enter a valid email address"),
-  password: z
-    .string()
-    .min(1, "Password is required")
-    .min(6, "Password must be at least 6 characters long"),
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
 
 export default function LoginForm() {
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const { setValue } = useTemp();
 
   // React Hook Form setup
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
-      password: "",
     },
   })
 
   const { mutateAsync: signIn, isPending } = useMutation({
-    mutationFn: login,
+    mutationFn: signInWithoutPassword,
     onError: (error) => {
       setError(error.message);
     },
     onSuccess: () => {
-      router.refresh();
-      redirect('/dashboard')
+      console.info("000")
+      router.push("/verify")
     }
   })
 
   const onSubmit = async (values: LoginFormValues) => {
     await signIn(values)
+    setValue(values.email);
   }
 
   return (
-    <div className="space-y-4">
-      {error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-          {error}
+    <Card className='bg-white rounded-3xl shadow-md'>
+      <CardContent className='p-9'>
+        <div className="space-y-4">
+          {error && (
+            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+              {error}
+            </div>
+          )}
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          {...field}
+                          type="email"
+                          placeholder="Enter your email"
+                          className="pl-10"
+                          data-testid="input-email"
+                          disabled={isPending}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                className="w-full"
+                loading={isPending}
+                disabled={isPending}
+                data-testid="button-login"
+              >
+                Continue
+              </Button>
+
+              <div className='w-full'>
+                <div className='flex flex-row items-center space-x-3'>
+                  <div className='flex-grow border-t border-gray-300' />
+                  <div className='text-gray-500 text-sm'>or</div>
+                  <div className='flex-grow border-t border-gray-300' />
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-300"
+                onClick={() => {
+                  // trigger Google login here
+                  console.log("Google login clicked")
+                }}
+              >
+                <Image
+                  src={"/icons/google-icon.png"}
+                  alt="Google"
+                  width={20}
+                  height={20}
+                  className="w-5 h-5"
+                />
+                Continue with Google
+              </Button>
+              
+            </form>
+          </Form>
         </div>
-      )}
-      
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      {...field}
-                      type="email"
-                      placeholder="Enter your email"
-                      className="pl-10"
-                      data-testid="input-email"
-                      disabled={isPending}
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      {...field}
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      className="pl-10 pr-10"
-                      data-testid="input-password"
-                      disabled={isPending}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-                      disabled={isPending}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isPending}
-            data-testid="button-login"
-          >
-            {isPending ? "Signing in..." : "Sign in"}
-          </Button>
-        </form>
-      </Form>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

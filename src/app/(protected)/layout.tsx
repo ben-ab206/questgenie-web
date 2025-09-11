@@ -12,21 +12,27 @@ export default async function ProtectedLayout({
   const supabase = await createClient()
 
   const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession()
+
+  const {
     data: { user },
-    error,
+    error: userError,
   } = await supabase.auth.getUser()
 
-  if (error || !user) {
+
+  if (sessionError || userError || !user || !session) {
     redirect("/login")
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("users")
     .select("*")
     .eq("user_id", user.id)
     .single()
 
-  if (!profile) {
+  if (profileError || !profile) {
     redirect("/login")
   }
 
@@ -40,6 +46,5 @@ export default async function ProtectedLayout({
         <UserProvider value={profile}>{children}</UserProvider>
       </main>
     </div>
-
   )
 }

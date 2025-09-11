@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { ReactQueryProvider } from './provider'
+import { TempContextProvider } from '@/context/temp-context'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ReactQueryProvider>{children}</ReactQueryProvider>
+        <ReactQueryProvider><TempContextProvider>{children}</TempContextProvider></ReactQueryProvider>
       </body>
     </html>
   )

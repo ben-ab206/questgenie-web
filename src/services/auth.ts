@@ -71,4 +71,54 @@ const updateCurrentUser = async ({ name, email }: { name?: string, email?: strin
     }
 }
 
-export { login, getCurrentUser, updateCurrentUser }
+
+const signInWithoutPassword = async ({ email }: { email: string }) => {
+    try {
+        const response = await fetch('/api/auth', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email,
+            }),
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+            return data.data as UserProfile
+        } else {
+            throw new Error(data.error || 'Sign in failed')
+        }
+    } catch (err) {
+        throw err
+    }
+}
+
+const verifyOTP = async ({ email, token }: { email: string, token: string }) => {
+    try {
+        const response = await fetch('/api/auth/verify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email,
+                token
+            }),
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+            return data.data as UserProfile
+        } else {
+            throw new Error(data.error || 'Verify OTP failed')
+        }
+    } catch (err) {
+        throw err
+    }
+}
+
+export { login, getCurrentUser, updateCurrentUser, signInWithoutPassword, verifyOTP }
