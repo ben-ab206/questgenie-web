@@ -247,7 +247,7 @@ export function formatTrueFalseForDisplay(question: Question): {
 } {
   return {
     question: question.question,
-    answerText: question.answer,
+    answerText: question.answer ?? "",
     hasExplanation: !!question.explanation
   };
 }

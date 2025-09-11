@@ -172,7 +172,7 @@ export function analyzeAnswerLengthDistribution(questions: Question[]): {
 } {
   const totalQuestions = questions.length;
   
-  const answerLengths = questions.map(q => q.answer.split(/\s+/).length);
+  const answerLengths = questions.map(q => (q.answer ?? "").split(/\s+/).length);
   const averageAnswerLength = totalQuestions > 0 ? 
     Math.round((answerLengths.reduce((sum, len) => sum + len, 0) / totalQuestions) * 100) / 100 : 0;
 
@@ -200,7 +200,7 @@ export function formatShortAnswerForDisplay(question: Question): {
 } {
   return {
     question: question.question,
-    answer: question.answer
+    answer: question.answer ?? ""
   };
 }
 
@@ -258,7 +258,7 @@ export function checkAnswerSimilarity(userAnswer: string, correctAnswer: string,
 export function convertToShortAnswerResponse(questions: Question[]): ShortAnswerResponse[] {
   return questions.map(q => ({
     question: q.question,
-    answer: q.answer
+    answer: q.answer ?? ""
   }));
 }
 

@@ -207,7 +207,7 @@ export function formatLongAnswerForDisplay(question: Question): {
 } {
   return {
     question: question.question,
-    answer: question.answer,
+    answer: question.answer ?? "",
   };
 }
 

@@ -250,7 +250,7 @@ export function formatFillInBlankForDisplay(question: Question): {
 
   return {
     question: question.question,
-    answerText,
+    answerText: answerText ?? "",
   };
 }
 

@@ -16,7 +16,7 @@ const TFQuestionBox: React.FC<TFQuestionBoxProps> = ({ question, index }) => {
   };
 
   const isCorrectAnswer = (option: string) => {
-    return option.toLowerCase().trim() === question.answer.toLowerCase().trim();
+    return option.toLowerCase().trim() === question.answer?.toLowerCase().trim();
   };
 
   return (
