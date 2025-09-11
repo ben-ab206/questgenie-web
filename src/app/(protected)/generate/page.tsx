@@ -23,6 +23,7 @@ import LAQuestionBox from "./_components/LAQuestionBox";
 import SAQuestionBox from "./_components/SAQuestionBox";
 import ExportDialog from "./_components/ExportDialog";
 import MCQQuestionBox from "./_components/MCQQuestionBox";
+import { uploadPDF } from "@/services/file_services";
 
 let worker: TesseractWorker | null = null;
 
@@ -52,7 +53,7 @@ const GeneratePage = () => {
     const [uploadFile, setUploadFile] = useState<File | undefined>(undefined);
     const [content, setContent] = useState("");
     const [title, setTitle] = useState("");
-    const [ showExportDialog, setShowExportDialog ] = useState(false);
+    const [showExportDialog, setShowExportDialog] = useState(false);
     const [description, setDescription] = useState("");
     const [isExtracting, setIsExtracting] = useState(false);
     const [sourceType, setSourceType] = useState<"text" | "file" | "youtube" | "image">("text");
@@ -81,6 +82,13 @@ const GeneratePage = () => {
         }),
         onSuccess: (data) => {
             setQuestions(data?.data?.questions ?? [])
+        }
+    });
+
+    const { mutateAsync: upload, isPending: isUploading } = useMutation({
+        mutationFn: uploadPDF,
+        onSuccess: (data) => {
+            setContent(data.text);
         }
     })
 
@@ -168,8 +176,9 @@ const GeneratePage = () => {
         validateField('questionTypes', newTypes);
     };
 
-    const handleFileSelect = (data: File) => {
+    const handleFileSelect = async (data: File) => {
         setUploadFile(data);
+        await upload(data);
         setSourceType("file");
     };
 
@@ -184,9 +193,7 @@ const GeneratePage = () => {
         }
 
         try {
-            if (sourceType === "text" || sourceType === "image") {
-                await generateQA();
-            }
+            await generateQA();
         } catch (error) {
             console.error("Generation failed:", error);
         }
@@ -259,7 +266,7 @@ const GeneratePage = () => {
 
     return (
         <div className="h-full">
-            <HeaderGenerate onExportFunc={onExport}/>
+            <HeaderGenerate onExportFunc={onExport} />
             <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-2">
                 <div className="p-4 space-y-4 overflow-y-auto h-full">
                     <div>
@@ -353,6 +360,22 @@ const GeneratePage = () => {
                                             </div>
                                         )}
                                     </div>
+                                    {isUploading && <div className="w-full p-2">
+                                        <Loader2Icon className="animate-spin h-5 w-5" />
+                                        <p>Extracting text from the file</p>
+                                    </div>}
+                                    {!isUploading && content && <div className="space-y-3">
+                                        <Label>Extracted Text</Label>
+                                        <Textarea
+                                            value={content}
+                                            onChange={(e) => {
+                                                setContent(e.target.value);
+                                                validateField('content', e.target.value);
+                                            }}
+                                            className={getInputClassName('content', "h-45 resize-none")}
+                                            data-testid="image-content-textarea"
+                                        />
+                                    </div>}
                                     {renderError('content')}
                                 </div>
                             </TabsContent>
@@ -656,12 +679,12 @@ const GeneratePage = () => {
                         {q.type === QuestionType.LONG_ANSWER && <LAQuestionBox question={q} idx={idx} />}
                         {q.type === QuestionType.SHORT_ANSWER && <SAQuestionBox question={q} idx={idx} />}
                         {q.type === QuestionType.MATCHING && <SCQQuestionBox question={q} index={idx} />}
-                        {q.type === QuestionType.MULTIPLE_CHOICE && <MCQQuestionBox question={q} index={idx}/>}
+                        {q.type === QuestionType.MULTIPLE_CHOICE && <MCQQuestionBox question={q} index={idx} />}
                     </div>)}
                 </div>
             </div>
             <LoadingModal isOpen={isPending} />
-            <ExportDialog dialogOpen={showExportDialog} data={questions} onClose={()=> setShowExportDialog(false)} />
+            <ExportDialog dialogOpen={showExportDialog} data={questions} onClose={() => setShowExportDialog(false)} />
         </div>
     );
 }
