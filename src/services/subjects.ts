@@ -17,6 +17,7 @@ interface SubjectsResponse {
         processingTime: string;
         count: number;
         totalCount?: number;
+        recentCount?: number;
         filters: {
             search?: string;
             type?: string;
@@ -29,6 +30,14 @@ interface SubjectsResponse {
             hasMore: boolean;
         };
     };
+}
+
+interface SubjectStatsResponse {
+    success: boolean
+    data: {
+        totalCount: number,
+        recentCount: number
+    }
 }
 
 const fetchSubjects = async (params?: FetchSubjectsParams): Promise<SubjectsResponse> => {
@@ -116,4 +125,4 @@ const fetchSubjectDetail = async (id: number): Promise<Subjects> => {
 };
 
 export { fetchSubjects, fetchSubjectTypes, fetchSubjectDetail };
-export type { FetchSubjectsParams, SubjectsResponse };
+export type { FetchSubjectsParams, SubjectsResponse, SubjectStatsResponse };

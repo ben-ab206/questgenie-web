@@ -28,7 +28,7 @@ const SCQQuestionBox: React.FC<SCQQuestionBoxProps> = ({ question, index }) => {
   const correctOptionKey = getCorrectOptionKey();
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+    <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <div className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-semibold">

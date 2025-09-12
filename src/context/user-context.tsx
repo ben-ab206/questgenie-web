@@ -9,7 +9,7 @@ export const UserProvider = ({
     value,
     children,
 }: {
-    value: UserProfile
+    value: UserProfile | null
     children: React.ReactNode
 }) => {
     return <UserContext.Provider value={value}>{children}</UserContext.Provider>

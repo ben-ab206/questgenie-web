@@ -357,3 +357,18 @@ const downloadCSV = (csvContent: string, filename: string) => {
   link.click();
   document.body.removeChild(link);
 };
+
+const QuestionTypeLabels: Record<QuestionType, string> = {
+  [QuestionType.SINGLE_CHOICE]: "Single Choice",
+  [QuestionType.TRUE_FALSE]: "True / False",
+  [QuestionType.FILL_IN_THE_BLANK]: "Fill in the Blank",
+  [QuestionType.SHORT_ANSWER]: "Short Answer",
+  [QuestionType.LONG_ANSWER]: "Long Answer",
+  [QuestionType.MATCHING]: "Matching",
+  [QuestionType.MULTIPLE_CHOICE]: "Multiple Choice",
+  // [QuestionType.ORDERING]: "Ordering",
+};
+
+export function getQuestionTypeLabel(type: QuestionType): string {
+  return QuestionTypeLabels[type] ?? type;
+}

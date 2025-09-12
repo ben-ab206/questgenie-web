@@ -16,7 +16,7 @@ export default function LoadingModal({
   message = "AI is analyzing your content and creating questions..." 
 }: LoadingModalProps) {
   return (
-    <Dialog open={isOpen}>
+    <Dialog open={isOpen} >
       <DialogContent className="max-w-sm" data-testid="loading-modal">
         <DialogTitle></DialogTitle>
         <div className="text-center py-4">

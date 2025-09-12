@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
 
     try {
         const { user, supabase } = await initializeServices();
-        
+
         if (!user) {
             return createErrorResponse('Authentication required', 401, startTime);
         }
@@ -29,11 +29,10 @@ export async function GET(request: NextRequest) {
             query = query.eq('type', type);
         }
 
+        console.log(search)
+
         if (search) {
-            query = query.or(`
-                title.ilike.%${search}%,
-                description.ilike.%${search}%
-            `);
+            query = query.or(`title.ilike.%${search}%`);
         }
 
         const isAscending = sortOrder.toLowerCase() === 'asc';
@@ -43,7 +42,7 @@ export async function GET(request: NextRequest) {
             const limitNum = parseInt(limit);
             if (!isNaN(limitNum) && limitNum > 0) {
                 query = query.limit(limitNum);
-                
+
                 if (offset) {
                     const offsetNum = parseInt(offset);
                     if (!isNaN(offsetNum) && offsetNum >= 0) {
@@ -69,8 +68,23 @@ export async function GET(request: NextRequest) {
             totalCount = total;
         }
 
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const { count: recentCount } = await supabase
+            .from('subjects')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .gte('created_at', today.toISOString());
+
+        const { count: total } = await supabase
+            .from('subjects')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id);
+
+
         const processingTime = calculateProcessingTime(startTime);
-        
+
         const response = {
             success: true,
             data: subjects || [],
@@ -78,7 +92,8 @@ export async function GET(request: NextRequest) {
                 timestamp: new Date().toISOString(),
                 processingTime,
                 count: subjects?.length || 0,
-                totalCount,
+                totalCount: total,
+                recentCount: recentCount,
                 filters: {
                     search,
                     type,
@@ -98,8 +113,8 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         console.error('API Error:', error);
         return createErrorResponse(
-            'Internal server error', 
-            500, 
+            'Internal server error',
+            500,
             startTime
         );
     }
@@ -108,7 +123,7 @@ export async function GET(request: NextRequest) {
 async function initializeServices() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (user) {
         const { data } = await supabase
             .from('users')
@@ -116,18 +131,18 @@ async function initializeServices() {
             .eq('user_id', user.id)
             .eq('is_active', true)
             .maybeSingle();
-            
+
         if (data) {
             return { user: data, supabase };
         }
     }
-    
+
     return { user: undefined, supabase };
 }
 
 function createErrorResponse(message: string, status: number, startTime: number) {
     const processingTime = calculateProcessingTime(startTime);
-    
+
     return NextResponse.json({
         success: false,
         error: message,
