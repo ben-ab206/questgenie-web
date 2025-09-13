@@ -1,4 +1,5 @@
-import { DifficultyLevel, QuestionBank } from "@/types/questions";
+import { getQuestionTypeLabel } from "@/lib/utils";
+import { DifficultyLevel, QuestionBank, QuestionType } from "@/types/questions";
 
 interface MCQQuestionBoxProps {
   question: QuestionBank;
@@ -30,7 +31,7 @@ const MCQQuestionBox: React.FC<MCQQuestionBoxProps> = ({ question, index }) => {
         <div className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-semibold">
           {index + 1}
         </div>
-        <span className="text-blue-600 font-medium">{question.type}</span>
+        <span className="text-blue-600 font-medium">{getQuestionTypeLabel(question.type as QuestionType)}</span>
         <span className={`px-2 py-1 rounded-full text-sm font-medium ${getDifficultyColor(question.difficulty as DifficultyLevel)}`}>
           {question.difficulty}
         </span>

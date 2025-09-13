@@ -13,15 +13,15 @@ const HeaderQuestionBankDetail = ({ title, description, onExportAction }: Header
             <p>{description}</p>
         </div>
         <div className="flex flex-row items-center space-x-2 w-full justify-end">
-            <button className="flex flex-row items-center bg-blue-200 rounded-lg p-2 space-x-1 px-3" onClick={onExportAction}>
+            <button className="flex flex-row items-center bg-[#ECFCFF] text-[#089BB2] rounded-lg p-2 space-x-1 px-3 hover:shadow-sm" onClick={onExportAction}>
                 <DownloadIcon className="h-4 w-4"/>
                 <span>Export</span>
             </button>
-            <button className="flex flex-row items-center bg-secondary/50 rounded-lg p-2 space-x-1 px-3">
+            <button className="flex flex-row items-center bg-primary/10 text-primary rounded-lg p-2 space-x-1 px-3 hover:shadow-sm">
                 <UploadIcon className="h-4 w-4"/>
                 <span>Share</span>
             </button>
-            <button className="flex flex-row items-center bg-primary rounded-lg p-2 space-x-1 px-3">
+            <button className="flex flex-row items-center bg-primary text-white rounded-lg p-2 space-x-1 px-3 hover:shadow-sm">
                 <RoseIcon className="h-4 w-4"/>
                 <span>Publish Quiz</span>
             </button>

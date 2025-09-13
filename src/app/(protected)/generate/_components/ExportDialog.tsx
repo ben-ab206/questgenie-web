@@ -6,6 +6,7 @@ import { Question } from "@/types/questions";
 import { Dialog } from "@radix-ui/react-dialog";
 
 import { CodeIcon, DownloadIcon, FileIcon } from "lucide-react";
+import { toast } from "sonner";
 
 interface ExportDialogProps {
     data: Question[];
@@ -28,13 +29,20 @@ const ExportDialog = ({ dialogOpen, data, onClose }: ExportDialogProps) => {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+        toast.success('Downloaded generated questions!')
     };
 
     const onExport = (type: "pdf" | "json" | "csv") => {
         const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
         if(type === "json") exportQuestionsWithFilename(data);
-        if(type === "pdf") exportQuestionsToPDF(data, `testing-${timestamp}`)
-        if(type === "csv") exportQuestionsToCSV(data, `testing-${timestamp}`)
+        if(type === "pdf") {
+            exportQuestionsToPDF(data, `testing-${timestamp}`);
+            toast.success('Downloaded generated questions!')
+        }
+        if(type === "csv") {
+            exportQuestionsToCSV(data, `testing-${timestamp}`)
+            toast.success('Downloaded generated questions!')
+        }
         onClose();
     }
 

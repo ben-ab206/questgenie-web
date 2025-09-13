@@ -23,6 +23,7 @@ import { useTemp } from "@/context/temp-context"
 import { useMutation } from "@tanstack/react-query"
 import { signInWithoutPassword, verifyOTP } from "@/services/auth"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 const FormSchema = z.object({
     pin: z.string().min(6, {
@@ -46,9 +47,11 @@ export function VerifyForm() {
     const { mutateAsync: verifyOTPCode, isPending: isVerifying } = useMutation({
         mutationFn: verifyOTP,
         onSuccess: () => {
+            toast.success("Successful login!")
+            router.refresh();
             router.push("/dashboard");
         },
-        onError: (err) => console.error(err.message) 
+        onError: (err) => toast.error(err.message)
     });
 
     const { mutateAsync: resendOTP, isPending: isResending } = useMutation({
@@ -56,7 +59,9 @@ export function VerifyForm() {
         onSuccess: () => {
             setSecondsLeft(90);
         },
-        onError: (err) => console.error(err.message)
+        onError: (err) => {
+            toast.error(err.message)
+        }
     })
 
     useEffect(() => {

@@ -6,12 +6,12 @@ import { cn } from "@/lib/utils"
 import {  Home, Plus, LogOut, X, ChevronLeft, ChevronRight, Book } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import LogoutDialog from "./LogoutDialog";
 
 interface SidebarProps {
   onClose?: () => void;
   userEmail?: string;
   userName?: string;
-  onLogout?: () => void;
   isLoggingOut?: boolean;
 }
 
@@ -19,10 +19,10 @@ export default function Sidebar({
   onClose, 
   userEmail = "email@gmail.com",
   userName = "User",
-  onLogout,
   isLoggingOut = false
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [ showLogoutDialog, setShowLogoutDialog ] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -44,8 +44,13 @@ export default function Sidebar({
   }
 
   const handleLogout = () => {
-    onLogout?.();
+    // onLogout?.();
+    setShowLogoutDialog(true);
   };
+
+  const handleCloseDialog = () => {
+    setShowLogoutDialog(false);
+  }
 
   const getInitials = (name: string, email: string) => {
     if (name && name !== "User") {
@@ -55,8 +60,11 @@ export default function Sidebar({
   };
 
   const isActiveRoute = (href: string) => {
-    return pathname === href || (href === "/" && pathname === "/");
-  };
+  if (!pathname) return false;
+
+  if (pathname === href) return true;
+  return pathname.startsWith(href + "/");
+};
 
   return (
     <div className={cn(
@@ -192,6 +200,7 @@ export default function Sidebar({
           )}
         </Button>
       </div>
+      <LogoutDialog dialogOpen={showLogoutDialog} onClose={handleCloseDialog} />
     </div>
   );
 }

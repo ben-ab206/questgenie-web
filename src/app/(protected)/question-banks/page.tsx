@@ -125,9 +125,9 @@ const QuestionBanksPage = () => {
                                                 <CardContent className="p-6 space-y-4">
                                                     <FileChartColumnIcon className="h-8 w-8" />
                                                     <div className="text-xl">{s.title}</div>
-                                                    <div className="flex flex-row space-x-2">{types.map((e, idx) => <Badge key={idx} className="bg-blue-200 p-1 px-2 text-primary">
+                                                    <div className="flex flex-row space-x-2">{types.map((e, idx) => <span key={idx} className="px-3 py-1 text-xs font-medium text-indigo-700 bg-indigo-100 rounded-full w-fit">
                                                         {getQuestionTypeLabel(e as QuestionType)}
-                                                    </Badge>)}</div>
+                                                    </span>)}</div>
                                                     <div className="flex flex-row items-center space-x-1 mb-3 text-gray-700">
                                                         <Calendar1Icon className="h-4 w-4" />
                                                         <p className="text-sm">Created at</p>

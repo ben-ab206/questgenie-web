@@ -38,7 +38,6 @@ export default function LoginForm() {
   const router = useRouter()
   const { setValue } = useTemp();
 
-  // React Hook Form setup
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -52,7 +51,6 @@ export default function LoginForm() {
       setError(error.message);
     },
     onSuccess: () => {
-      console.info("000")
       router.push("/verify")
     }
   })

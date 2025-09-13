@@ -25,6 +25,25 @@ const login = async ({ email, password }: { email: string, password: string }) =
     }
 }
 
+const logout = async () => {
+    try{
+        const response = await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+
+        if (response.ok) {
+            return;
+        } else {
+            throw new Error('Logout failed')
+        }
+    }catch(err){
+        throw err
+    }
+}
+
 const getCurrentUser = async () => {
     try {
         const response = await fetch('/api/profile', {
@@ -121,4 +140,4 @@ const verifyOTP = async ({ email, token }: { email: string, token: string }) => 
     }
 }
 
-export { login, getCurrentUser, updateCurrentUser, signInWithoutPassword, verifyOTP }
+export { login, getCurrentUser, updateCurrentUser, signInWithoutPassword, verifyOTP, logout }

@@ -25,6 +25,7 @@ import ExportDialog from "./_components/ExportDialog";
 import MCQQuestionBox from "./_components/MCQQuestionBox";
 import { uploadPDF } from "@/services/file_services";
 import MatchingQuestionBox from "./_components/MatchingQuestionBox";
+import { toast } from "sonner";
 
 let worker: TesseractWorker | null = null;
 
@@ -82,15 +83,18 @@ const GeneratePage = () => {
             description: description,
         }),
         onSuccess: (data) => {
+            toast.success('Successful generated!')
             setQuestions(data?.data?.questions ?? [])
-        }
+        },
+        onError: (err) => toast.error(err.message)
     });
 
     const { mutateAsync: upload, isPending: isUploading } = useMutation({
         mutationFn: uploadPDF,
         onSuccess: (data) => {
             setContent(data.text);
-        }
+        },
+        onError: (err) => toast.error(err.message)
     })
 
     const validateForm = (): ValidationErrors => {
