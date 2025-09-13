@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import HeaderQuestionBankDetail from "../_components/HeaderQuestionBankDetail";
@@ -79,6 +79,8 @@ const QuestionBankDetails = () => {
 
     const [showDialog, setShowDialog] = useState(false);
 
+    const router = useRouter();
+
     const { data: subjects, isLoading } = useQuery({
         queryKey: ['GET_SUBJECT_DETAIL', id],
         queryFn: () => fetchSubjectDetail(Number(id)),
@@ -94,6 +96,7 @@ const QuestionBankDetails = () => {
                     title={isLoading ? "Loading..." : subjects?.title || "HELLO"}
                     description="Quiz Preview & Management"
                     onExportAction={() => setShowDialog(true)}
+                    onBack={()=> router.back()}
                 />
             </div>
 

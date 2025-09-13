@@ -17,7 +17,8 @@ export class OpenRouterClient {
     };
   }
 
-  async generateResponse(prompt: string): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async generateResponse(prompt: string): Promise<any> {
     const startTime = Date.now();
     let lastError: Error | null = null;
 
@@ -71,7 +72,8 @@ export class OpenRouterClient {
       ],
       temperature: 0.7,
       max_tokens: 4000,
-      top_p: 0.9
+      top_p: 0.9,
+      response_format: { type: "json_object" }
     };
 
     return axios.post(

@@ -17,6 +17,7 @@ import { parseMatchingResponse } from '@/lib/parsers/parser_matchings';
 import { generateRandomQuestionPromptMix } from '@/lib/prompts/mix_prompts';
 import { buildMCQPrompt } from '@/lib/prompts/mcq_prompts';
 import { parseMCQResponse } from '@/lib/parsers/parser_mcq';
+import { type } from 'os';
 
 export class QuestionGenerator {
   private openRouterClient: OpenRouterClient;
@@ -320,6 +321,8 @@ export class QuestionGenerator {
       
       const prompt = buildMCQPrompt(config);
       const response = await this.openRouterClient.generateResponse(prompt);
+      console.log(response)
+      console.log(typeof response);
       const questions = parseMCQResponse(response, config);
 
       return {
