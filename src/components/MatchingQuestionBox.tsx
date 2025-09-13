@@ -62,7 +62,7 @@ const MatchingQuestionBox: React.FC<MatchingQuestionProps> = ({ question, idx })
         >
           {question.difficulty}
         </span>
-        {question.bloom_level ? <span className="px-3 py-1 rounded-full text-sm text-primary border border-primary font-medium">{"HELL"}</span> : null}
+        {question.bloom_level ? <span className="px-3 py-1 rounded-full text-sm text-primary border border-primary font-medium">{question.bloom_level}</span> : null}
       </div>
 
       {/* Question Text */}

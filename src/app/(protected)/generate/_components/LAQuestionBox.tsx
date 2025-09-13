@@ -1,4 +1,5 @@
-import { DifficultyLevel, Question } from "@/types/questions";
+import { getQuestionTypeLabel } from "@/lib/utils";
+import { DifficultyLevel, Question, QuestionType } from "@/types/questions";
 
 interface LAQuestionBoxProps {
     question: Question,
@@ -21,11 +22,15 @@ const LAQuestionBox = ({ question, idx }: LAQuestionBoxProps) => {
             <div className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-semibold">
                 {idx + 1}
             </div>
-            <span className="text-blue-600 font-medium">{question.type}</span>
-            <span className={`px-2 py-1 rounded-full text-sm font-medium ${getDifficultyColor(question.difficulty)}`}>
+            <span className="px-3 py-1 text-sm font-medium text-indigo-700 bg-indigo-100 rounded-full w-fit">{getQuestionTypeLabel(question.type as QuestionType)}</span>
+            <span
+                className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(
+                    question.difficulty as DifficultyLevel
+                )}`}
+            >
                 {question.difficulty}
             </span>
-            <span className="text-blue-500 font-medium">{question.language}</span>
+            {question.bloom_level ? <span className="px-3 py-1 rounded-full text-sm text-primary border border-primary font-medium">{question.bloom_level}</span> : null}
         </div>
 
         {/* Question */}

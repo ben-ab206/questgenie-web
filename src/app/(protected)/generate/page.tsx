@@ -1,6 +1,6 @@
 "use client"
 
-import { BloomLevel, DifficultyLevel, Question, QuestionType } from "@/types/questions"
+import { BloomLevel, DifficultyLevel, Language, Question, QuestionType } from "@/types/questions"
 import { useMutation } from "@tanstack/react-query"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sparkles, Youtube, Image, FileText, Upload, Minus, Plus, Loader2Icon } from "lucide-react";
@@ -80,10 +80,12 @@ const GeneratePage = () => {
             type: questionTypes,
             source: sourceType,
             title: title,
+            language: language as Language,
             description: description,
         }),
         onSuccess: (data) => {
             toast.success('Successful generated!')
+            console.log(data);
             setQuestions(data?.data?.questions ?? [])
         },
         onError: (err) => toast.error(err.message)
@@ -272,7 +274,7 @@ const GeneratePage = () => {
     return (
         <div className="h-screen flex flex-col">
             {/* Sticky Header */}
-            <div className="sticky top-0 z-50 bg-white shadow-sm">
+            <div className="sticky top-0 z-50 bg-white border-b border-b-gray-200">
                 <HeaderGenerate onExportFunc={onExport} />
             </div>
 
@@ -708,16 +710,22 @@ const GeneratePage = () => {
                             </Button>
                         </div>
                     </div>
-                    <div className="w-full bg-white space-y-2 p-3 overflow-y-auto">
-                        {questions.map((q, idx) => <div key={idx}>
-                            {q.type === QuestionType.SINGLE_CHOICE && <SCQQuestionBox question={q} index={idx} />}
-                            {q.type === QuestionType.TRUE_FALSE && <TFQuestionBox question={q} index={idx} />}
-                            {q.type === QuestionType.FILL_IN_THE_BLANK && <BlankQuestionBox question={q} index={idx} />}
-                            {q.type === QuestionType.LONG_ANSWER && <LAQuestionBox question={q} idx={idx} />}
-                            {q.type === QuestionType.SHORT_ANSWER && <SAQuestionBox question={q} idx={idx} />}
-                            {q.type === QuestionType.MATCHING && <MatchingQuestionBox question={q} idx={idx} />}
-                            {q.type === QuestionType.MULTIPLE_CHOICE && <MCQQuestionBox question={q} index={idx} />}
-                        </div>)}
+                    <div className="w-full bg-white space-y-5 p-5 overflow-y-auto py-5 border-l border-l-gray-300">
+                        <div className="w-full items-center flex flex-row justify-between">
+                            <p className="text-2xl font-medium">Generated Questoins</p>
+                            <p>{`${questions.length} questions generated`}</p>
+                        </div>
+                        <div className="space-y-2">
+                            {questions.map((q, idx) => <div key={idx}>
+                                {q.type === QuestionType.SINGLE_CHOICE && <SCQQuestionBox question={q} index={idx} />}
+                                {q.type === QuestionType.TRUE_FALSE && <TFQuestionBox question={q} index={idx} />}
+                                {q.type === QuestionType.FILL_IN_THE_BLANK && <BlankQuestionBox question={q} index={idx} />}
+                                {q.type === QuestionType.LONG_ANSWER && <LAQuestionBox question={q} idx={idx} />}
+                                {q.type === QuestionType.SHORT_ANSWER && <SAQuestionBox question={q} idx={idx} />}
+                                {q.type === QuestionType.MATCHING && <MatchingQuestionBox question={q} idx={idx} />}
+                                {q.type === QuestionType.MULTIPLE_CHOICE && <MCQQuestionBox question={q} index={idx} />}
+                            </div>)}
+                        </div>
                     </div>
                 </div>
             </div>

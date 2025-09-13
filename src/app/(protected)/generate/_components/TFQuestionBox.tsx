@@ -1,8 +1,9 @@
-import { DifficultyLevel, Question } from "@/types/questions";
+import { getQuestionTypeLabel } from "@/lib/utils";
+import { DifficultyLevel, Question, QuestionType } from "@/types/questions";
 
 interface TFQuestionBoxProps {
-    question: Question,
-    index: number
+  question: Question,
+  index: number
 }
 
 const TFQuestionBox: React.FC<TFQuestionBoxProps> = ({ question, index }) => {
@@ -26,11 +27,15 @@ const TFQuestionBox: React.FC<TFQuestionBoxProps> = ({ question, index }) => {
         <div className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-semibold">
           {index + 1}
         </div>
-        <span className="text-blue-600 font-medium">{question.type}</span>
-        <span className={`px-2 py-1 rounded-full text-sm font-medium ${getDifficultyColor(question.difficulty)}`}>
+        <span className="px-3 py-1 text-sm font-medium text-indigo-700 bg-indigo-100 rounded-full w-fit">{getQuestionTypeLabel(question.type as QuestionType)}</span>
+        <span
+          className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(
+            question.difficulty as DifficultyLevel
+          )}`}
+        >
           {question.difficulty}
         </span>
-        <span className="text-blue-500 font-medium">{question.language}</span>
+        {question.bloom_level ? <span className="px-3 py-1 rounded-full text-sm text-primary border border-primary font-medium">{question.bloom_level}</span> : null}
       </div>
 
       {/* Question */}
@@ -42,15 +47,14 @@ const TFQuestionBox: React.FC<TFQuestionBoxProps> = ({ question, index }) => {
       <div className="flex gap-4">
         {['True', 'False'].map((option) => {
           const isCorrect = isCorrectAnswer(option);
-          
+
           return (
             <div
               key={option}
-              className={`flex-1 border rounded-lg p-4 transition-colors ${
-                isCorrect 
-                  ? 'border-green-300 bg-green-50' 
+              className={`flex-1 border rounded-lg p-4 transition-colors ${isCorrect
+                  ? 'border-green-300 bg-green-50'
                   : 'border-gray-200 bg-gray-50'
-              }`}
+                }`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-gray-700 font-medium">{option}</span>

@@ -315,6 +315,8 @@ export class QuestionGenerator {
 
     try {
       validateQuestionConfig(config);
+
+      console.log(config);
       
       const prompt = buildMCQPrompt(config);
       const response = await this.openRouterClient.generateResponse(prompt);

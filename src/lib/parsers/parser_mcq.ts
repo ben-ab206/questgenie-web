@@ -85,15 +85,21 @@ function validateMCQItem(item: any, index: number): void {
     throw new Error(`correctAnswer must be an array for MCQ`);
   }
 
-  // Validate correctAnswer has 1 or 2 answers
-  if (item.correctAnswer.length < 1 || item.correctAnswer.length > 2) {
-    throw new Error(`correctAnswer must have exactly 1 or 2 answers, got ${item.correctAnswer.length}`);
+  // Validate correctAnswer has at least 1 answer (removed upper limit)
+  if (item.correctAnswer.length < 1) {
+    throw new Error(`correctAnswer must have at least 1 answer, got ${item.correctAnswer.length}`);
   }
 
   // Validate all correct answers exist in options
   const invalidAnswers = item.correctAnswer.filter((answer: string) => !item.options[answer]);
   if (invalidAnswers.length > 0) {
     throw new Error(`correctAnswer contains invalid options: ${invalidAnswers.join(', ')}`);
+  }
+
+  // Optional: Validate that not all options are correct (would make the question meaningless)
+  const totalOptions = Object.keys(item.options).length;
+  if (item.correctAnswer.length >= totalOptions) {
+    throw new Error(`correctAnswer cannot include all available options (${totalOptions} options, ${item.correctAnswer.length} correct)`);
   }
 }
 
@@ -115,8 +121,15 @@ function validateAndNormalizeCorrectAnswers(correctAnswer: any, options: Options
   // Remove duplicates and sort for consistency
   const uniqueAnswers = [...new Set(normalizedAnswers)].sort();
   
-  if (uniqueAnswers.length < 1 || uniqueAnswers.length > 2) {
-    throw new Error(`MCQ must have exactly 1 or 2 correct answers, got ${uniqueAnswers.length}`);
+  // Validate minimum answers (removed maximum limit)
+  if (uniqueAnswers.length < 1) {
+    throw new Error(`MCQ must have at least 1 correct answer, got ${uniqueAnswers.length}`);
+  }
+
+  // Optional: Validate that not all options are correct
+  const totalOptions = Object.keys(options).length;
+  if (uniqueAnswers.length >= totalOptions) {
+    throw new Error(`MCQ cannot have all options as correct (${totalOptions} options, ${uniqueAnswers.length} correct)`);
   }
 
   return uniqueAnswers;
@@ -156,8 +169,8 @@ function createLegacyMCQQuestion(item: any, config: QuestionConfig, index: numbe
     throw new Error(`Question ${index + 1} must have at least 2 options`);
   }
 
-  if (!Array.isArray(item.correctAnswers) || item.correctAnswers.length < 1 || item.correctAnswers.length > 2) {
-    throw new Error(`Question ${index + 1} must have 1 or 2 correct answers`);
+  if (!Array.isArray(item.correctAnswers) || item.correctAnswers.length < 1) {
+    throw new Error(`Question ${index + 1} must have at least 1 correct answer`);
   }
 
   // Validate correct answer indices
@@ -213,8 +226,8 @@ export function validateMCQQuestions(questions: Question[]): void {
       throw new Error(`Question ${index + 1}: MCQ must have options`);
     }
 
-    if (!question.mcq_answers || question.mcq_answers.length < 1 || question.mcq_answers.length > 2) {
-      throw new Error(`Question ${index + 1}: MCQ must have exactly 1 or 2 correct answers`);
+    if (!question.mcq_answers || question.mcq_answers.length < 1) {
+      throw new Error(`Question ${index + 1}: MCQ must have at least 1 correct answer`);
     }
 
     // Validate mcq_answers match available options
@@ -223,6 +236,11 @@ export function validateMCQQuestions(questions: Question[]): void {
     
     if (invalidAnswers.length > 0) {
       throw new Error(`Question ${index + 1}: Invalid MCQ answers: ${invalidAnswers.join(', ')}`);
+    }
+
+    // Optional: Validate that not all options are correct
+    if (question.mcq_answers.length >= availableKeys.length) {
+      throw new Error(`Question ${index + 1}: MCQ cannot have all options as correct`);
     }
   });
 }
