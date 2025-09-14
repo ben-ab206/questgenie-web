@@ -712,7 +712,7 @@ const GeneratePage = () => {
                     </div>
                     <div className="w-full bg-white space-y-5 p-5 overflow-y-auto py-5 border-l border-l-gray-300">
                         <div className="w-full items-center flex flex-row justify-between">
-                            <p className="text-2xl font-medium">Generated Questoins</p>
+                            <p className="text-2xl font-medium">Generated Questions</p>
                             <p>{`${questions.length} questions generated`}</p>
                         </div>
                         <div className="space-y-2">

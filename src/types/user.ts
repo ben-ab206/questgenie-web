@@ -3,4 +3,5 @@ export type UserProfile = {
   email: string
   name: string
   user_id: string
+  image_path?: string
 }

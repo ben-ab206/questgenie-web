@@ -6,17 +6,26 @@ import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/services/auth";
 import { useState } from "react";
 import EmailDialog from "./_components/EmailDialog";
+import ProfileImageDialog from "./_components/ProfileImageDialog";
 
 const ProfilePage = () => {
 
     const [ showEmailDialog, setShowEmailDialog ] = useState(false);
+    const [ showProfileImageDialog, setShowProfileImageDialog ] = useState(false);
 
     const { data: profile } = useQuery({
         queryKey: ["ME"],
         queryFn: getCurrentUser
     });
 
-    const handleProfilePictureChange = () => { }
+    const handleProfilePictureChange = () => {
+        setShowProfileImageDialog(true);
+     }
+
+     const onDialogClose = () => {
+        setShowEmailDialog(false);
+        setShowProfileImageDialog(false);
+     }
 
     const handleChangeEmail = () => { setShowEmailDialog(true); }
 
@@ -30,7 +39,11 @@ const ProfilePage = () => {
                             <div className="py-4 border-b border-b-gray-200"><h2 className="text-xl font-semibold text-gray-900">Account</h2></div>
 
                             <div className="flex items-center space-x-4 mb-4">
-                                <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center">
+                                { profile?.image_path ? 
+                                <div className="w-20 h-20 rounded-full flex items-center justify-center">
+                                    <img src={profile.image_path} className="w-full h-full rounded-full" />
+                                </div>
+                                 :<div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center">
                                     <svg
                                         className="w-10 h-10 text-white"
                                         fill="currentColor"
@@ -38,7 +51,7 @@ const ProfilePage = () => {
                                     >
                                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                                     </svg>
-                                </div>
+                                </div>}
 
                                 <div className="flex-1">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -84,7 +97,8 @@ const ProfilePage = () => {
             </Card>
         </div>
 
-        <EmailDialog dialogOpen={showEmailDialog} onClose={()=> setShowEmailDialog(false)}/>
+        <EmailDialog dialogOpen={showEmailDialog} onClose={onDialogClose}/>
+        {profile && <ProfileImageDialog dialogOpen={showProfileImageDialog} user={profile} onDialogClose={onDialogClose}/> }
     </div>
 }
 
