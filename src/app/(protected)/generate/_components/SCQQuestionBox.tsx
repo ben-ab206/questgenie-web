@@ -5,6 +5,7 @@ interface SCQQuestionBoxProps {
   question: Question;
   index: number;
 }
+
 const SCQQuestionBox: React.FC<SCQQuestionBoxProps> = ({ question, index }) => {
   const getDifficultyColor = (difficulty: DifficultyLevel) => {
     switch (difficulty) {
@@ -16,11 +17,19 @@ const SCQQuestionBox: React.FC<SCQQuestionBoxProps> = ({ question, index }) => {
   };
 
   const getCorrectOptionKey = () => {
-    if (!question.options) return null;
+    if (!question.options || !question.answer) return null;
 
+    const answer = question.answer.toString().trim().toUpperCase();
+    
+    // Check if answer is already a letter (A, B, C, D, E)
+    if (/^[A-E]$/.test(answer)) {
+      return answer;
+    }
+    
+    // Fallback: if answer is still full text, find matching option
     const optionEntries = Object.entries(question.options);
     const correctEntry = optionEntries.find(([key, value]) =>
-      value.toLowerCase().trim() === question.answer?.toLowerCase().trim()
+      value?.toLowerCase().trim() === question.answer?.toLowerCase().trim()
     );
 
     return correctEntry ? correctEntry[0] : null;
@@ -35,7 +44,9 @@ const SCQQuestionBox: React.FC<SCQQuestionBoxProps> = ({ question, index }) => {
         <div className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-semibold">
           {index + 1}
         </div>
-        <span className="px-3 py-1 text-sm font-medium text-indigo-700 bg-indigo-100 rounded-full w-fit">{getQuestionTypeLabel(question.type as QuestionType)}</span>
+        <span className="px-3 py-1 text-sm font-medium text-indigo-700 bg-indigo-100 rounded-full w-fit">
+          {getQuestionTypeLabel(question.type as QuestionType)}
+        </span>
         <span
           className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(
             question.difficulty as DifficultyLevel
@@ -43,7 +54,11 @@ const SCQQuestionBox: React.FC<SCQQuestionBoxProps> = ({ question, index }) => {
         >
           {question.difficulty}
         </span>
-        {question.bloom_level ? <span className="px-3 py-1 rounded-full text-sm text-primary border border-primary font-medium">{question.bloom_level}</span> : null}
+        {question.bloom_level && (
+          <span className="px-3 py-1 rounded-full text-sm text-primary border border-primary font-medium">
+            {question.bloom_level}
+          </span>
+        )}
       </div>
 
       {/* Question */}
@@ -62,10 +77,11 @@ const SCQQuestionBox: React.FC<SCQQuestionBoxProps> = ({ question, index }) => {
             return (
               <div
                 key={key}
-                className={`border rounded-lg p-4 transition-colors ${isCorrect
+                className={`border rounded-lg p-4 transition-colors ${
+                  isCorrect
                     ? 'border-green-300 bg-green-50'
                     : 'border-gray-200 bg-gray-50'
-                  }`}
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-gray-700">
@@ -80,6 +96,13 @@ const SCQQuestionBox: React.FC<SCQQuestionBoxProps> = ({ question, index }) => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Answer Info - Debug Display (Remove in production) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600">
+          <span>{`Debug - Answer: "${question.answer}" | Correct Key: "${correctOptionKey}"`}</span>
         </div>
       )}
 

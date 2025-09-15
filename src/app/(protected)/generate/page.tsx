@@ -532,7 +532,7 @@ const GeneratePage = () => {
                                                 onCheckedChange={(checked) => handleQuestionTypeChange(QuestionType.SINGLE_CHOICE, !!checked)}
                                                 data-testid="question-type-scq"
                                             />
-                                            <Label htmlFor="scq" className="text-sm">Single Choice (MCQ)</Label>
+                                            <Label htmlFor="scq" className="text-sm">Single Choice (SCQ)</Label>
                                         </div>
                                         <div className="flex items-center space-x-2">
                                             <Checkbox

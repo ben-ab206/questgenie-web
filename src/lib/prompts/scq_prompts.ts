@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { QuestionConfig, Language, DifficultyLevel, SCQConfig, BloomLevel } from "@/types/questions";
 
 export function buildSCQPrompt(config: SCQConfig): string {
@@ -26,12 +27,19 @@ SCQ SPECIFIC REQUIREMENTS:
 
 ${qualityInstructions}
 
+CRITICAL OUTPUT FORMAT REQUIREMENTS:
+- The "correctAnswer" field must ONLY contain the option letter (A, B, C, D${config.optionsCount === 5 ? ', or E' : ''})
+- DO NOT include the answer text in the "correctAnswer" field
+- Example of CORRECT format: "correctAnswer": "B"
+- Example of INCORRECT format: "correctAnswer": "The process of photosynthesis"
+- ALWAYS use ONLY the letter designation for correctAnswer
+
 CONTENT TO ANALYZE:
 """
 ${config.content}
 """
 
-OUTPUT FORMAT (JSON array only, no additional text):
+OUTPUT FORMAT (JSON array only, no additional text or explanations outside the JSON):
 [
   {
     "question": "Clear, specific question text here",
@@ -46,7 +54,9 @@ OUTPUT FORMAT (JSON array only, no additional text):
     "bloomLevel": "${config.bloom_level}",
     "contentReference": "Specific part of content this question relates to"
   }
-]`;
+]
+
+REMEMBER: The correctAnswer value must be ONLY the letter (A, B, C, D${config.optionsCount === 5 ? ', or E' : ''}), nothing else!`;
 }
 
 function getSCQLanguageInstruction(language: Language): string {
@@ -128,10 +138,11 @@ function getBloomLevelInstruction(bloomLevel: BloomLevel): string {
 - Assess ability to reorganize elements into new patterns or structures
 - Focus on generating new ideas, products, or solutions based on the content`,
 
-    [BloomLevel.MIXED] : ``
+    [BloomLevel.MIXED] : `BLOOM'S LEVEL: MIXED
+- Include questions from multiple Bloom's taxonomy levels
+- Distribute questions across different cognitive levels
+- Ensure variety in thinking skills required`
   };
-
-  
 
   return instructions[bloomLevel];
 }
@@ -164,7 +175,12 @@ function getSCQQualityInstructions(config: SCQConfig): string {
 - Avoid obvious clues in option wording
 - Maintain consistent formatting and style
 - Ensure all content is factually accurate based on provided material
-- Align question complexity with both difficulty level and Bloom's taxonomy level`;
+- Align question complexity with both difficulty level and Bloom's taxonomy level
+
+ANSWER FORMAT REMINDER:
+- The correctAnswer field must contain ONLY the option letter
+- Valid examples: "A", "B", "C", "D"${config.optionsCount === 5 ? ', "E"' : ''}
+- Invalid examples: "Option A", "The correct answer is B", full answer text`;
 
   return instructions;
 }
@@ -193,7 +209,7 @@ export function buildSCQFromQuestionConfig(config: QuestionConfig): string {
   const scqConfig: SCQConfig = {
     language: config.language,
     difficulty: config.difficulty,
-    bloom_level: config.bloom_level || BloomLevel.UNDERSTAND, // Default to UNDERSTAND if not provided
+    bloom_level: config.bloom_level || BloomLevel.UNDERSTAND,
     topic: config.topic,
     quantity: config.quantity,
     content: config.content,
@@ -245,5 +261,39 @@ export function getAllBloomLevelKeywords(): { [key in BloomLevel]: string[] } {
     [BloomLevel.EVALUATE]: ['assess', 'critique', 'defend', 'evaluate', 'judge', 'justify', 'rank', 'validate'],
     [BloomLevel.CREATE]: ['compose', 'construct', 'create', 'design', 'develop', 'formulate', 'generate', 'produce'],
     [BloomLevel.MIXED]: [] // Not used directly, but included for completeness
+  };
+}
+
+// Helper function to validate generated SCQ response format
+export function validateSCQResponse(response: any[]): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  
+  if (!Array.isArray(response)) {
+    return { isValid: false, errors: ['Response must be a JSON array'] };
+  }
+
+  response.forEach((item, index) => {
+    // Check if correctAnswer is just a letter
+    if (item.correctAnswer && typeof item.correctAnswer === 'string') {
+      const correctAnswer = item.correctAnswer.trim();
+      if (!/^[A-E]$/.test(correctAnswer)) {
+        errors.push(`Question ${index + 1}: correctAnswer should be only a letter (A, B, C, D, or E), got: "${correctAnswer}"`);
+      }
+    } else {
+      errors.push(`Question ${index + 1}: correctAnswer is missing or invalid`);
+    }
+    
+    // Check required fields
+    const requiredFields = ['question', 'options', 'correctAnswer', 'explanation'];
+    requiredFields.forEach(field => {
+      if (!item[field]) {
+        errors.push(`Question ${index + 1}: Missing required field "${field}"`);
+      }
+    });
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors
   };
 }

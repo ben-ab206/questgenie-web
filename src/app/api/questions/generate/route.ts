@@ -177,17 +177,13 @@ function createQuestionData(question: Question, subjectId: string) {
     language: question.language,
     difficulty: question.difficulty,
     type: question.type,
+    options: question.options,
     explanation: question.explanation,
     matching_questions: question.matching_questions,
     matching_answers: question.matching_answers,
     mcq_answers: question.mcq_answers,
   };
-
-  // Add options for multiple choice questions
-  if (question.type === QuestionType.MULTIPLE_CHOICE && question.options) {
-    return { ...baseData, options: question.options };
-  }
-
+  
   return baseData;
 }
 

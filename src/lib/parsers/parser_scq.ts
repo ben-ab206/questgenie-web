@@ -38,8 +38,8 @@ function createQuestion(item: any, config: QuestionConfig, index: number): Quest
   try {
     validateSCQItem(item, index);
     
-    const optionsArray = convertOptionsToArray(item.options);
-    const correctIndex = getCorrectOptionIndex(item.correctAnswer, item.options);
+    // const optionsArray = convertOptionsToArray(item.options);
+    // const correctIndex = getCorrectOptionIndex(item.correctAnswer, item.options);
     
     return {
       type: QuestionType.SINGLE_CHOICE,
@@ -47,7 +47,7 @@ function createQuestion(item: any, config: QuestionConfig, index: number): Quest
       bloom_level: config.bloom_level,
       language: config.language,
       question: String(item.question).trim(),
-      answer: optionsArray[correctIndex],
+      answer: item.correctAnswer,
       options: item.options,
     };
   } catch (error) {

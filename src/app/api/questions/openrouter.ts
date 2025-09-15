@@ -72,8 +72,7 @@ export class OpenRouterClient {
       ],
       temperature: 0.7,
       max_tokens: 4000,
-      top_p: 0.9,
-      response_format: { type: "json_object" }
+      top_p: 0.9
     };
 
     return axios.post(
