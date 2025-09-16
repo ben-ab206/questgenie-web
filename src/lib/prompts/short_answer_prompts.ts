@@ -1,16 +1,18 @@
-import { QuestionConfig, Language, DifficultyLevel, ShortAnswerConfig, ShortAnswerResponse } from "@/types/questions";
+import { QuestionConfig, Language, DifficultyLevel, ShortAnswerConfig, ShortAnswerResponse, BloomLevel } from "@/types/questions";
 
 export function buildShortAnswerPrompt(config: ShortAnswerConfig): string {
   const languageInstruction = getShortAnswerLanguageInstruction(config.language);
   const difficultyInstruction = getShortAnswerDifficultyInstruction(config.difficulty);
   const qualityInstructions = getShortAnswerQualityInstructions(config);
   const lengthInstruction = getShortAnswerLengthInstruction(config.answerLength);
+  const bloomInstruction = getBloomLevelInstructionShortAnswer(config.bloom_level);
 
   return `${languageInstruction}
 
 TASK: Generate Short Answer Questions
 ${difficultyInstruction}
 ${lengthInstruction}
+${bloomInstruction}
 
 SHORT ANSWER SPECIFIC REQUIREMENTS:
 1. Create exactly ${config.quantity} short answer question(s)
@@ -79,6 +81,48 @@ function getShortAnswerDifficultyInstruction(difficulty: DifficultyLevel): strin
   return instructions[difficulty];
 }
 
+function getBloomLevelInstructionShortAnswer(bloomLevel: BloomLevel): string {
+  const instructions = {
+    [BloomLevel.REMEMBER]: `BLOOM'S LEVEL: REMEMBER (Short Answer)
+- Ask for recall of key facts, terms, or basic concepts in 1–2 sentences
+- Example stems: "What is the definition of...?", "Name the three states of matter.", "Who discovered penicillin?"
+- Focus on direct retrieval of information`,
+
+    [BloomLevel.UNDERSTAND]: `BLOOM'S LEVEL: UNDERSTAND (Short Answer)
+- Require short explanations or summaries to show comprehension
+- Example stems: "What does this concept mean?", "Summarize why plants need sunlight.", "Explain in one sentence the purpose of DNA."
+- Assess ability to interpret and explain ideas briefly`,
+
+    [BloomLevel.APPLY]: `BLOOM'S LEVEL: APPLY (Short Answer)
+- Ask learners to use knowledge in a practical or new situation
+- Example stems: "How would you calculate the area of a rectangle with length 5 and width 3?", "Give an example of Newton’s third law in daily life."
+- Focus on demonstrating correct use of concepts`,
+
+    [BloomLevel.ANALYZE]: `BLOOM'S LEVEL: ANALYZE (Short Answer)
+- Require breaking down or identifying parts and relationships concisely
+- Example stems: "What is one factor that contributed to the outcome of...?", "Identify the independent variable in this experiment."
+- Focus on recognizing patterns, roles, or causes`,
+
+    [BloomLevel.EVALUATE]: `BLOOM'S LEVEL: EVALUATE (Short Answer)
+- Ask for brief judgments, critiques, or choices supported by reasoning
+- Example stems: "Which method is more reliable and why?", "What is the strongest piece of evidence for this argument?"
+- Assess ability to justify decisions briefly`,
+
+    [BloomLevel.CREATE]: `BLOOM'S LEVEL: CREATE (Short Answer)
+- Require generating new ideas or proposing original solutions in a concise form
+- Example stems: "Suggest one way to reduce plastic waste.", "What variable would you add to improve this experiment?"
+- Focus on short, creative responses that show synthesis`,
+
+    [BloomLevel.MIXED]: `BLOOM'S LEVEL: MIXED (Short Answer)
+- Combine recall, explanation, application, analysis, evaluation, and creation
+- Include a variety of short-answer prompts across Bloom’s levels
+- Ensure balance between factual recall and higher-order thinking in concise responses`
+  };
+
+  return instructions[bloomLevel];
+}
+
+
 function getShortAnswerLengthInstruction(answerLength?: 'brief' | 'moderate' | 'detailed'): string {
   const instructions = {
     'brief': 'ANSWER LENGTH: Expect answers to be 1-3 words or a short phrase (5-15 words maximum)',
@@ -113,75 +157,4 @@ function getShortAnswerQualityInstructions(config: ShortAnswerConfig): string {
 - Ensure each question tests a distinct aspect of the content`;
 
   return instructions;
-}
-
-// Alternative simplified version for basic Short Answer generation
-export function buildSimpleShortAnswerPrompt(
-  content: string, 
-  quantity: number = 5, 
-  language: Language = Language.ENGLISH,
-  difficulty: DifficultyLevel = DifficultyLevel.MEDIUM
-): string {
-  
-  const config: ShortAnswerConfig = {
-    language,
-    difficulty, 
-    quantity,
-    content,
-    answerLength: 'moderate',
-  };
-
-  return buildShortAnswerPrompt(config);
-}
-
-// Export for backward compatibility with existing QuestionConfig
-export function buildShortAnswerFromQuestionConfig(config: QuestionConfig): string {
-  const saConfig: ShortAnswerConfig = {
-    language: config.language,
-    difficulty: config.difficulty,
-    quantity: config.quantity,
-    content: config.content,
-    answerLength: 'moderate'
-  };
-
-  return buildShortAnswerPrompt(saConfig);
-}
-
-// Enhanced version with more features
-export function buildAdvancedShortAnswerPrompt(config: ShortAnswerConfig): string {
-  // Set enhanced defaults for advanced version
-  const enhancedConfig: ShortAnswerConfig = {
-    ...config,
-    answerLength: config.answerLength ?? 'detailed'
-  };
-
-  return buildShortAnswerPrompt(enhancedConfig);
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function validateShortAnswerResponse(response: any): response is ShortAnswerResponse {
-  return (
-    typeof response === 'object' &&
-    typeof response.question === 'string' &&
-    typeof response.answer === 'string' &&
-    typeof response.contentReference === 'string' &&
-    response.question.length > 0 &&
-    response.answer.length > 0 &&
-    response.contentReference.length > 0
-  );
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function validateShortAnswerResponses(responses: any[]): ShortAnswerResponse[] {
-  if (!Array.isArray(responses)) {
-    throw new Error('Response must be an array of Short Answer questions');
-  }
-
-  const validResponses = responses.filter(validateShortAnswerResponse);
-  
-  if (validResponses.length !== responses.length) {
-    throw new Error('Some Short Answer responses are invalid or malformed');
-  }
-
-  return validResponses;
 }

@@ -1,16 +1,18 @@
-import { QuestionConfig, Language, DifficultyLevel, LongAnswerConfig, LongAnswerResponse } from "@/types/questions";
+import { Language, DifficultyLevel, LongAnswerConfig, BloomLevel } from "@/types/questions";
 
 export function buildLongAnswerPrompt(config: LongAnswerConfig): string {
   const languageInstruction = getLongAnswerLanguageInstruction(config.language);
   const difficultyInstruction = getLongAnswerDifficultyInstruction(config.difficulty);
-  const qualityInstructions = getLongAnswerQualityInstructions(config);
+  // const qualityInstructions = getLongAnswerQualityInstructions(config);
   const lengthInstruction = getLongAnswerLengthInstruction(config.answerLength);
+  const bloomInstruction = getBloomLevelInstructionLongAnswer(config.bloom_level);
 
   return `${languageInstruction}
 
 TASK: Generate Long Answer Questions
 ${difficultyInstruction}
 ${lengthInstruction}
+${bloomInstruction}
 
 LONG ANSWER SPECIFIC REQUIREMENTS:
 1. Create exactly ${config.quantity} long answer question(s)
@@ -21,8 +23,6 @@ LONG ANSWER SPECIFIC REQUIREMENTS:
 6. Require multi-paragraph responses with structured arguments
 7. Include questions that need explanation of processes, relationships, or concepts
 8. Ensure questions promote critical thinking and detailed elaboration
-
-${qualityInstructions}
 
 CONTENT TO ANALYZE:
 """
@@ -86,6 +86,48 @@ function getLongAnswerDifficultyInstruction(difficulty: DifficultyLevel): string
   return instructions[difficulty];
 }
 
+function getBloomLevelInstructionLongAnswer(bloomLevel: BloomLevel): string {
+  const instructions = {
+    [BloomLevel.REMEMBER]: `BLOOM'S LEVEL: REMEMBER (Long Answer)
+- Ask learners to recall and write definitions, lists, or key facts
+- Example stems: "Describe the main events of...", "List the characteristics of...", "What is the definition of..."
+- Responses should show memorization of essential information`,
+
+    [BloomLevel.UNDERSTAND]: `BLOOM'S LEVEL: UNDERSTAND (Long Answer)
+- Require explanation, summary, or interpretation in the response
+- Example stems: "Explain in your own words...", "Summarize the main idea of...", "What does this concept mean..."
+- Assess comprehension of relationships, meanings, and context`,
+
+    [BloomLevel.APPLY]: `BLOOM'S LEVEL: APPLY (Long Answer)
+- Ask learners to demonstrate how knowledge can be used in practical or novel contexts
+- Example stems: "How would you use this principle to solve...", "Apply this concept to explain...", "Give an example of how..."
+- Responses should connect theory to practice`,
+
+    [BloomLevel.ANALYZE]: `BLOOM'S LEVEL: ANALYZE (Long Answer)
+- Require breaking information into parts and examining relationships
+- Example stems: "Break down the factors that contribute to...", "Analyze the causes and effects of...", "What evidence supports..."
+- Responses should identify structure, components, and patterns`,
+
+    [BloomLevel.EVALUATE]: `BLOOM'S LEVEL: EVALUATE (Long Answer)
+- Ask learners to make judgments, critiques, or justify positions
+- Example stems: "Evaluate the effectiveness of...", "Which approach is best and why...", "Defend or refute the statement..."
+- Responses should apply criteria, evidence, and reasoning`,
+
+    [BloomLevel.CREATE]: `BLOOM'S LEVEL: CREATE (Long Answer)
+- Require synthesis of ideas into new products, plans, or solutions
+- Example stems: "Propose a plan to...", "Design a strategy for...", "What innovative solution would you suggest..."
+- Responses should demonstrate originality, planning, or creative synthesis`,
+
+    [BloomLevel.MIXED]: `BLOOM'S LEVEL: MIXED (Long Answer)
+- Include prompts across multiple Bloom’s levels
+- Balance between recall, explanation, application, analysis, evaluation, and creation
+- Ensure variety in depth and complexity of written responses`
+  };
+
+  return instructions[bloomLevel];
+}
+
+
 
 function getLongAnswerLengthInstruction(answerLength?: LongAnswerConfig['answerLength']): string {
   const instructions = {
@@ -95,142 +137,4 @@ function getLongAnswerLengthInstruction(answerLength?: LongAnswerConfig['answerL
   };
 
   return instructions[answerLength || 'standard'];
-}
-
-function getLongAnswerQualityInstructions(config: LongAnswerConfig): string {
-  let instructions = `QUALITY STANDARDS:`;
-
-  instructions += `
-- Ensure questions require comprehensive, multi-faceted responses
-- Create questions that test deep understanding rather than surface-level recall
-- Questions should require structured, well-organized answers`;
-
-  instructions += `
-- Focus on the most significant and complex aspects of the content
-- Prioritize questions that reveal understanding of key relationships and principles
-- Ensure questions assess critical thinking and analytical skills`;
-
-    instructions += `
-- Include questions that naturally break down into multiple sub-topics
-- Structure questions to encourage organized, point-by-point responses`;
-
-
-    instructions += `
-- Require answers to include specific evidence and examples from the content
-- Ask for justification and support for claims made in responses`;
-
-  instructions += `
-- Write clear, unambiguous questions with specific expectations
-- Use appropriate academic language and question structures
-- Ensure answers can be fully supported by the provided content
-- Make questions appropriately challenging for the difficulty level
-- Avoid questions that require extensive external knowledge
-- Maintain consistent complexity and depth across all questions
-- Ensure each question explores different aspects of the content
-- Include key points that should be covered in ideal answers
-- For high difficulty, include rubric criteria for assessment`;
-
-  return instructions;
-}
-
-// Alternative simplified version for basic Long Answer generation
-export function buildSimpleLongAnswerPrompt(
-  content: string, 
-  quantity: number = 3, 
-  language: Language = Language.ENGLISH,
-  difficulty: DifficultyLevel = DifficultyLevel.MEDIUM
-): string {
-  
-  const config: LongAnswerConfig = {
-    language,
-    difficulty, 
-    quantity,
-    content,
-    answerLength: 'standard'
-  };
-
-  return buildLongAnswerPrompt(config);
-}
-
-// Export for backward compatibility with existing QuestionConfig
-export function buildLongAnswerFromQuestionConfig(config: QuestionConfig): string {
-  const laConfig: LongAnswerConfig = {
-    language: config.language,
-    difficulty: config.difficulty,
-    quantity: config.quantity,
-    content: config.content,
-    answerLength: 'standard'
-  };
-
-  return buildLongAnswerPrompt(laConfig);
-}
-
-// Enhanced version with advanced features
-export function buildAdvancedLongAnswerPrompt(config: LongAnswerConfig): string {
-  // Set enhanced defaults for advanced version
-  const enhancedConfig: LongAnswerConfig = {
-    ...config,
-    answerLength: config.answerLength ?? 'comprehensive',
-  };
-
-  return buildLongAnswerPrompt(enhancedConfig);
-}
-
-// Validation functions
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function validateLongAnswerResponse(response: any): response is LongAnswerResponse {
-  return (
-    typeof response === 'object' &&
-    typeof response.question === 'string' &&
-    typeof response.answer === 'string'
-  );
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function validateLongAnswerResponses(responses: any[]): LongAnswerResponse[] {
-  if (!Array.isArray(responses)) {
-    throw new Error('Response must be an array of Long Answer questions');
-  }
-
-  const validResponses = responses.filter(validateLongAnswerResponse);
-  
-  if (validResponses.length !== responses.length) {
-    throw new Error('Some Long Answer responses are invalid or malformed');
-  }
-
-  return validResponses;
-}
-
-// Utility function to generate topic-specific long answer questions
-export function buildTopicSpecificLongAnswerPrompt(
-  content: string,
-  topic: string,
-  difficulty: DifficultyLevel = DifficultyLevel.MEDIUM,
-  quantity: number = 2,
-  language: Language = Language.ENGLISH
-): string {
-  const config: LongAnswerConfig = {
-    language,
-    difficulty,
-    quantity,
-    content,
-  };
-
-  return buildLongAnswerPrompt(config);
-}
-
-export function buildRubricBasedLongAnswerPrompt(
-  content: string,
-  quantity: number = 2,
-  language: Language = Language.ENGLISH
-): string {
-  const config: LongAnswerConfig = {
-    language,
-    difficulty: DifficultyLevel.HIGH,
-    quantity,
-    content,
-    answerLength: 'comprehensive'
-  };
-
-  return buildLongAnswerPrompt(config);
 }

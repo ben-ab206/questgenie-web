@@ -100,11 +100,11 @@ const SCQQuestionBox: React.FC<SCQQuestionBoxProps> = ({ question, index }) => {
       )}
 
       {/* Answer Info - Debug Display (Remove in production) */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* {process.env.NODE_ENV === 'development' && (
         <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600">
           <span>{`Debug - Answer: "${question.answer}" | Correct Key: "${correctOptionKey}"`}</span>
         </div>
-      )}
+      )} */}
 
       {/* Explanation */}
       {question.explanation && (

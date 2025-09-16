@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import crypto from 'crypto';
 import jsPDF from 'jspdf';
-import { Question, QuestionBank, QuestionType } from "@/types/questions";
+import { Options, Question, QuestionBank, QuestionType } from "@/types/questions";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -48,7 +48,6 @@ export function generateRandomSelection(stringList: string[], maxNumber: number)
 }
 
 
-
 export const exportQuestionsToPDF = (questions: Question[], file_name: string) => {
   console.log(questions)
   const doc = new jsPDF();
@@ -80,16 +79,18 @@ export const exportQuestionsToPDF = (questions: Question[], file_name: string) =
     switch (question.type) {
       case QuestionType.MULTIPLE_CHOICE:
         if (question.options) {
-          doc.text(`A) ${question.options.A}`, margin + 10, yPosition);
+          const correctAnswers = question.mcq_answers || [];
+          
+          doc.text(`A) ${question.options.A}${correctAnswers.includes('A') ? ' ✓' : ''}`, margin + 10, yPosition);
           yPosition += 6;
-          doc.text(`B) ${question.options.B}`, margin + 10, yPosition);
+          doc.text(`B) ${question.options.B}${correctAnswers.includes('B') ? ' ✓' : ''}`, margin + 10, yPosition);
           yPosition += 6;
-          doc.text(`C) ${question.options.C}`, margin + 10, yPosition);
+          doc.text(`C) ${question.options.C}${correctAnswers.includes('C') ? ' ✓' : ''}`, margin + 10, yPosition);
           yPosition += 6;
-          doc.text(`D) ${question.options.D}`, margin + 10, yPosition);
+          doc.text(`D) ${question.options.D}${correctAnswers.includes('D') ? ' ✓' : ''}`, margin + 10, yPosition);
           yPosition += 6;
           if (question.options.E) {
-            doc.text(`E) ${question.options.E}`, margin + 10, yPosition);
+            doc.text(`E) ${question.options.E}${correctAnswers.includes('E') ? ' ✓' : ''}`, margin + 10, yPosition);
             yPosition += 6;
           }
         }
@@ -152,6 +153,7 @@ export const exportQuestionsToCSV = (questions: Question[], filename = 'question
     'Option C',
     'Option D',
     'Option E',
+    'MCQ Answers',
     'Explanation',
     'Bloom Level',
     'Matching Questions',
@@ -172,6 +174,7 @@ export const exportQuestionsToCSV = (questions: Question[], filename = 'question
         escapeCSVField(question.options?.C || ''),
         escapeCSVField(question.options?.D || ''),
         escapeCSVField(question.options?.E || ''),
+        escapeCSVField(formatMCQAnswers(question.mcq_answers)),
         escapeCSVField(question.explanation || ''),
         question.bloom_level,
         escapeCSVField(formatMatchingQuestions(question.matching_questions)),
@@ -185,8 +188,6 @@ export const exportQuestionsToCSV = (questions: Question[], filename = 'question
 
   downloadCSV(csvContent, filename);
 };
-
-
 
 export const exportQuestionsBankToPDF = (questions: QuestionBank[], file_name: string) => {
   console.log(questions)
@@ -219,16 +220,18 @@ export const exportQuestionsBankToPDF = (questions: QuestionBank[], file_name: s
     switch (question.type) {
       case QuestionType.MULTIPLE_CHOICE:
         if (question.options) {
-          doc.text(`A) ${question.options.A}`, margin + 10, yPosition);
+          const correctAnswers = question.mcq_answers || [];
+          
+          doc.text(`A) ${question.options.A}${correctAnswers.includes('A') ? ' ✓' : ''}`, margin + 10, yPosition);
           yPosition += 6;
-          doc.text(`B) ${question.options.B}`, margin + 10, yPosition);
+          doc.text(`B) ${question.options.B}${correctAnswers.includes('B') ? ' ✓' : ''}`, margin + 10, yPosition);
           yPosition += 6;
-          doc.text(`C) ${question.options.C}`, margin + 10, yPosition);
+          doc.text(`C) ${question.options.C}${correctAnswers.includes('C') ? ' ✓' : ''}`, margin + 10, yPosition);
           yPosition += 6;
-          doc.text(`D) ${question.options.D}`, margin + 10, yPosition);
+          doc.text(`D) ${question.options.D}${correctAnswers.includes('D') ? ' ✓' : ''}`, margin + 10, yPosition);
           yPosition += 6;
           if (question.options.E) {
-            doc.text(`E) ${question.options.E}`, margin + 10, yPosition);
+            doc.text(`E) ${question.options.E}${correctAnswers.includes('E') ? ' ✓' : ''}`, margin + 10, yPosition);
             yPosition += 6;
           }
         }
@@ -291,6 +294,7 @@ export const exportQuestionsBankToCSV = (questions: QuestionBank[], filename = '
     'Option C',
     'Option D',
     'Option E',
+    'MCQ Answers',
     'Explanation',
     'Bloom Level',
     'Matching Questions',
@@ -311,6 +315,7 @@ export const exportQuestionsBankToCSV = (questions: QuestionBank[], filename = '
         escapeCSVField(question.options?.C || ''),
         escapeCSVField(question.options?.D || ''),
         escapeCSVField(question.options?.E || ''),
+        escapeCSVField(formatMCQAnswers(question.mcq_answers)),
         escapeCSVField(question.explanation || ''),
         question.bloom_level,
         escapeCSVField(formatMatchingQuestions(question.matching_questions)),
@@ -342,6 +347,11 @@ const formatMatchingQuestions = (matchingQuestions?: { [key: string]: string;  }
 const formatMatchingAnswers = (matchingAnswers?: { [key: string]: string;  }[]): string => {
   if (!matchingAnswers) return '';
   return matchingAnswers.map(item => `${item.A} -> ${item.B}`).join('; ');
+};
+
+const formatMCQAnswers = (mcqAnswers?: (keyof Options)[]): string => {
+  if (!mcqAnswers || mcqAnswers.length === 0) return '';
+  return mcqAnswers.join(', ');
 };
 
 const downloadCSV = (csvContent: string, filename: string) => {

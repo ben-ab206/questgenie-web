@@ -1,4 +1,4 @@
-import { QuestionConfig, Language, DifficultyLevel, TrueFalseConfig, TrueFalseResponse } from "@/types/questions";
+import { Language, DifficultyLevel, TrueFalseConfig, BloomLevel } from "@/types/questions";
 
 export function buildTrueFalsePrompt(config: TrueFalseConfig): string {
   const languageInstruction = getTrueFalseLanguageInstruction(config.language);
@@ -6,6 +6,7 @@ export function buildTrueFalsePrompt(config: TrueFalseConfig): string {
   const topicInstruction = getTrueFalseTopicInstruction(config.topic);
   const qualityInstructions = getTrueFalseQualityInstructions(config);
   const balanceInstruction = getTrueFalseBalanceInstruction(config.balanceAnswers);
+  const bloomInstruction = getBloomLevelInstructionTrueFalse(config.bloom_level);
 
   return `${languageInstruction}
 
@@ -13,6 +14,7 @@ TASK: Generate True/False Questions
 ${topicInstruction}
 ${difficultyInstruction}
 ${balanceInstruction}
+${bloomInstruction}
 
 TRUE/FALSE SPECIFIC REQUIREMENTS:
 1. Create exactly ${config.quantity} true/false question(s)
@@ -90,6 +92,49 @@ function getTrueFalseTopicInstruction(topic?: string): string {
     : 'TOPIC FOCUS: Identify and focus on the most important concepts and factual information in the content.';
 }
 
+
+function getBloomLevelInstructionTrueFalse(bloomLevel: BloomLevel): string {
+  const instructions = {
+    [BloomLevel.REMEMBER]: `BLOOM'S LEVEL: REMEMBER (True/False)
+- Focus on recall of basic facts, definitions, or simple statements
+- Example: "The Earth revolves around the Sun. (T/F)", "Water freezes at 0°C. (T/F)"
+- Test recognition of factual accuracy`,
+
+    [BloomLevel.UNDERSTAND]: `BLOOM'S LEVEL: UNDERSTAND (True/False)
+- Use statements that test comprehension of meaning, relationships, or summaries
+- Example: "Photosynthesis is the process by which plants produce glucose. (T/F)", "The main purpose of the heart is to circulate blood. (T/F)"
+- Assess whether learners grasp the idea, not just recall it`,
+
+    [BloomLevel.APPLY]: `BLOOM'S LEVEL: APPLY (True/False)
+- Present real-life scenarios or problems that require applying knowledge
+- Example: "A recipe requiring baking soda can be substituted with baking powder without changing results. (T/F)", "Using Ohm’s Law, if voltage doubles and resistance stays the same, current doubles. (T/F)"
+- Test the ability to apply rules or concepts correctly`,
+
+    [BloomLevel.ANALYZE]: `BLOOM'S LEVEL: ANALYZE (True/False)
+- Use statements that require identifying relationships, patterns, or structures
+- Example: "In a controlled experiment, the independent variable is the one that changes. (T/F)", "Correlation always proves causation. (T/F)"
+- Assess ability to distinguish between correct and incorrect connections`,
+
+    [BloomLevel.EVALUATE]: `BLOOM'S LEVEL: EVALUATE (True/False)
+- Use statements requiring judgment of validity, quality, or logic
+- Example: "Peer-reviewed journals are always free from bias. (T/F)", "A stronger argument always relies on emotional appeal. (T/F)"
+- Assess ability to critique or judge accuracy`,
+
+    [BloomLevel.CREATE]: `BLOOM'S LEVEL: CREATE (True/False)
+- Present statements about innovative ideas, plans, or designs for learners to validate
+- Example: "A new renewable energy system must include both storage and generation components. (T/F)", "Combining plastic and organic waste in compost improves decomposition. (T/F)"
+- Focus on testing reasoning about novel or creative proposals`,
+
+    [BloomLevel.MIXED]: `BLOOM'S LEVEL: MIXED (True/False)
+- Combine factual recall, comprehension, application, analysis, evaluation, and creation
+- Provide a balanced set of True/False questions across Bloom’s levels
+- Ensure variety between simple recognition and higher-order reasoning`
+  };
+
+  return instructions[bloomLevel];
+}
+
+
 function getTrueFalseBalanceInstruction(balanceAnswers?: boolean): string {
   if (balanceAnswers === false) {
     return 'ANSWER DISTRIBUTION: Create questions naturally based on content - no need to balance true/false answers.';
@@ -124,85 +169,4 @@ function getTrueFalseQualityInstructions(config: TrueFalseConfig): string {
 - Maintain consistent tone and style across all questions`;
 
   return instructions;
-}
-
-// Alternative simplified version for basic True/False generation
-export function buildSimpleTrueFalsePrompt(
-  content: string, 
-  quantity: number = 5, 
-  language: Language = Language.ENGLISH,
-  difficulty: DifficultyLevel = DifficultyLevel.MEDIUM
-): string {
-  
-  const config: TrueFalseConfig = {
-    language,
-    difficulty, 
-    quantity,
-    content,
-    includeExplanation: false,
-    avoidAmbiguity: true,
-    focusOnKeyPoints: true,
-    balanceAnswers: true,
-    requireJustification: false
-  };
-
-  return buildTrueFalsePrompt(config);
-}
-
-// Export for backward compatibility with existing QuestionConfig
-export function buildTrueFalseFromQuestionConfig(config: QuestionConfig): string {
-  const tfConfig: TrueFalseConfig = {
-    language: config.language,
-    difficulty: config.difficulty,
-    topic: config.topic,
-    quantity: config.quantity,
-    content: config.content,
-    includeExplanation: false,
-    avoidAmbiguity: true,
-    focusOnKeyPoints: true,
-    balanceAnswers: true,
-    requireJustification: false
-  };
-
-  return buildTrueFalsePrompt(tfConfig);
-}
-
-// Enhanced version with more features
-export function buildAdvancedTrueFalsePrompt(config: TrueFalseConfig): string {
-  // Set enhanced defaults for advanced version
-  const enhancedConfig: TrueFalseConfig = {
-    ...config,
-    includeExplanation: config.includeExplanation ?? true,
-    requireJustification: config.requireJustification ?? true,
-    balanceAnswers: config.balanceAnswers ?? true
-  };
-
-  return buildTrueFalsePrompt(enhancedConfig);
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function validateTrueFalseResponse(response: any): response is TrueFalseResponse {
-  return (
-    typeof response === 'object' &&
-    typeof response.question === 'string' &&
-    typeof response.answer === 'boolean' &&
-    typeof response.contentReference === 'string' &&
-    response.question.length > 0 &&
-    response.contentReference.length > 0
-  );
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function validateTrueFalseResponses(responses: any[]): TrueFalseResponse[] {
-  if (!Array.isArray(responses)) {
-    throw new Error('Response must be an array of True/False questions');
-  }
-
-  const validResponses = responses.filter(validateTrueFalseResponse);
-  
-  if (validResponses.length !== responses.length) {
-    throw new Error('Some True/False responses are invalid or malformed');
-  }
-
-  return validResponses;
 }

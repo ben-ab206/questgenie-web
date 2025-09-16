@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { QuestionConfig, Language, DifficultyLevel, MatchingQuestionConfig, MatchingQuestionResponse } from "@/types/questions";
+import { Language, DifficultyLevel, MatchingQuestionConfig, BloomLevel } from "@/types/questions";
 
 export function buildMatchingQuestionPrompt(config: MatchingQuestionConfig): string {
   const languageInstruction = getLanguageInstruction(config.language);
   const difficultyInstruction = getDifficultyInstruction(config.difficulty);
   const typeInstruction = getTypeInstruction(config.matchingType);
+  const bloomInstruction = getBloomLevelInstructionMatching(config.bloom_level);
 
   return `${languageInstruction}
 
@@ -12,6 +13,7 @@ Generate ${config.quantity} matching question(s) based on the content below.
 
 ${difficultyInstruction}
 ${typeInstruction}
+${bloomInstruction}
 
 Requirements:
 - Create 4-6 matching pairs per question
@@ -76,93 +78,43 @@ function getTypeInstruction(matchingType?: MatchingQuestionConfig['matchingType'
   return instructions[matchingType || 'general'];
 }
 
-// Simplified builders
-export function buildSimpleMatchingPrompt(
-  content: string,
-  quantity: number = 2,
-  language: Language = Language.ENGLISH,
-  difficulty: DifficultyLevel = DifficultyLevel.MEDIUM
-): string {
-  return buildMatchingQuestionPrompt({ language, difficulty, quantity, content });
-}
+function getBloomLevelInstructionMatching(bloomLevel: BloomLevel): string {
+  const instructions = {
+    [BloomLevel.REMEMBER]: `BLOOM'S LEVEL: REMEMBER (Matching)
+- Match basic terms with their definitions, facts, or symbols
+- Example: "Match the country to its capital", "Match the scientist to their discovery"
+- Focus on straightforward recall and recognition`,
 
-export function buildDefinitionMatchingPrompt(
-  content: string,
-  quantity: number = 2,
-  language: Language = Language.ENGLISH,
-  difficulty: DifficultyLevel = DifficultyLevel.MEDIUM
-): string {
-  return buildMatchingQuestionPrompt({ 
-    language, difficulty, quantity, content, matchingType: 'definition' 
-  });
-}
+    [BloomLevel.UNDERSTAND]: `BLOOM'S LEVEL: UNDERSTAND (Matching)
+- Match concepts with their explanations, summaries, or examples
+- Example: "Match each process with its description", "Match the vocabulary word to a sentence that demonstrates its meaning"
+- Assess comprehension of relationships and meanings`,
 
-export function buildCauseEffectMatchingPrompt(
-  content: string,
-  quantity: number = 2,
-  language: Language = Language.ENGLISH,
-  difficulty: DifficultyLevel = DifficultyLevel.MEDIUM
-): string {
-  return buildMatchingQuestionPrompt({ 
-    language, difficulty, quantity, content, matchingType: 'cause-effect' 
-  });
-}
+    [BloomLevel.APPLY]: `BLOOM'S LEVEL: APPLY (Matching)
+- Match problems to solutions, scenarios to methods, or situations to principles
+- Example: "Match each math problem to the correct formula", "Match real-world situations with the scientific law that applies"
+- Focus on practical application of learned knowledge`,
 
-export function buildConceptMatchingPrompt(
-  content: string,
-  quantity: number = 2,
-  language: Language = Language.ENGLISH,
-  difficulty: DifficultyLevel = DifficultyLevel.MEDIUM
-): string {
-  return buildMatchingQuestionPrompt({ 
-    language, difficulty, quantity, content, matchingType: 'concept' 
-  });
-}
+    [BloomLevel.ANALYZE]: `BLOOM'S LEVEL: ANALYZE (Matching)
+- Match causes to effects, components to structures, or evidence to arguments
+- Example: "Match each symptom to its possible cause", "Match the part of an essay to its function"
+- Assess ability to identify parts, relationships, and patterns`,
 
-// Validation functions
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function validateMatchingResponse(response: any): response is MatchingQuestionResponse {
-  return (
-    typeof response === 'object' &&
-    typeof response.question === 'string' &&
-    Array.isArray(response.matching_questions) &&
-    Array.isArray(response.matching_answers) &&
-    response.matching_questions.length === response.matching_answers.length &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    response.matching_questions.every((item: any) => typeof item === 'object') &&
-    response.matching_answers.every((item: any) => typeof item === 'object')
-  );
-}
+    [BloomLevel.EVALUATE]: `BLOOM'S LEVEL: EVALUATE (Matching)
+- Match arguments with supporting evidence, criteria with judgments, or claims with validity levels
+- Example: "Match each conclusion with the strength of its supporting evidence", "Match decision-making criteria with appropriate outcomes"
+- Assess ability to judge quality and validity`,
 
-export function validateMatchingResponses(responses: any[]): MatchingQuestionResponse[] {
-  if (!Array.isArray(responses)) {
-    throw new Error('Response must be an array of matching questions');
-  }
+    [BloomLevel.CREATE]: `BLOOM'S LEVEL: CREATE (Matching)
+- Match components that can be combined to design a new whole
+- Example: "Match research methods to questions to design a valid study", "Match materials with purposes to create a functional invention"
+- Focus on synthesis and generating new ideas`,
 
-  const validResponses = responses.filter(validateMatchingResponse);
-  
-  if (validResponses.length !== responses.length) {
-    throw new Error('Some matching responses are invalid');
-  }
+    [BloomLevel.MIXED]: `BLOOM'S LEVEL: MIXED (Matching)
+- Combine recall, comprehension, application, analysis, evaluation, and creation
+- Include a variety of matches that span multiple Bloom’s levels
+- Ensure balance between simple recognition and higher-order thinking`
+  };
 
-  return validResponses;
-}
-
-export function validateMatchingCorrespondence(response: MatchingQuestionResponse): boolean {
-  const questionPairs = response.matching_questions;
-  const answerPairs = response.matching_answers;
-
-  if (questionPairs.length !== answerPairs.length) {
-    return false;
-  }
-
-  return answerPairs.every(answer =>
-    questionPairs.some(question => {
-      const qEntries = Object.entries(question);
-      const aEntries = Object.entries(answer);
-      return qEntries.length === 2 && aEntries.length === 2 &&
-             qEntries[0][0] === aEntries[0][0] && qEntries[0][1] === aEntries[0][1] &&
-             qEntries[1][0] === aEntries[1][0] && qEntries[1][1] === aEntries[1][1];
-    })
-  );
+  return instructions[bloomLevel];
 }

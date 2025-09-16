@@ -125,6 +125,7 @@ function buildPromptForType(
         language,
         difficulty,
         quantity,
+        bloom_level: bloomLevel,
         content,
         answerLength: 'moderate'
       };
@@ -136,6 +137,7 @@ function buildPromptForType(
         difficulty,
         quantity,
         content,
+        bloom_level: bloomLevel,
         includeExplanation: true,
         avoidAmbiguity: true,
         focusOnKeyPoints: true,
@@ -150,6 +152,7 @@ function buildPromptForType(
         difficulty,
         quantity,
         content,
+        bloom_level: bloomLevel,
         blankType: 'mixed',
         includeExplanation: false,
         avoidAmbiguity: true,
@@ -163,6 +166,7 @@ function buildPromptForType(
         language,
         difficulty,
         quantity,
+        bloom_level: bloomLevel,
         content,
         answerLength: 'standard'
       };
@@ -172,6 +176,7 @@ function buildPromptForType(
       const matchingConfig: MatchingQuestionConfig = {
         language,
         difficulty,
+        bloom_level: bloomLevel,
         quantity,
         content
       };

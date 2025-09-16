@@ -1,14 +1,16 @@
-import { QuestionConfig, Language, DifficultyLevel, FillInBlankConfig } from "@/types/questions";
+import { Language, DifficultyLevel, FillInBlankConfig, BloomLevel } from "@/types/questions";
 
 export function buildFillInBlankPrompt(config: FillInBlankConfig): string {
   const languageInstruction = getFillInBlankLanguageInstruction(config.language);
   const difficultyInstruction = getFillInBlankDifficultyInstruction(config.difficulty);
   const qualityInstructions = getFillInBlankQualityInstructions(config);
+  const bloomInstruction = getBloomLevelInstructionFillBlank(config.bloom_level);
 
   return `${languageInstruction}
 
 TASK: Generate Fill-in-the-Blank Questions
 ${difficultyInstruction}
+${bloomInstruction}
 
 FILL-IN-THE-BLANK SPECIFIC REQUIREMENTS:
 1. Create exactly ${config.quantity} fill-in-the-blank question(s)
@@ -43,6 +45,49 @@ function getFillInBlankLanguageInstruction(language: Language): string {
 
   return instructions[language] || instructions[Language.ENGLISH];
 }
+
+function getBloomLevelInstructionFillBlank(bloomLevel: BloomLevel): string {
+  const instructions = {
+    [BloomLevel.REMEMBER]: `BLOOM'S LEVEL: REMEMBER (Fill-in-the-Blank)
+- Focus on recall of key terms, definitions, and facts
+- Use blanks for critical terminology or basic concepts directly from the content
+- Example stems: "The capital of France is ____.", "Water freezes at ____ degrees Celsius."
+- Test straightforward memorization of specific details`,
+
+    [BloomLevel.UNDERSTAND]: `BLOOM'S LEVEL: UNDERSTAND (Fill-in-the-Blank)
+- Assess comprehension by requiring paraphrasing or explanation in blank form
+- Example stems: "The process by which plants make food is called ____.", "Photosynthesis occurs in the ____ of plant cells."
+- Use blanks to test understanding of relationships, main ideas, or processes`,
+
+    [BloomLevel.APPLY]: `BLOOM'S LEVEL: APPLY (Fill-in-the-Blank)
+- Require learners to use knowledge in practical contexts
+- Example stems: "The formula for the area of a circle is ____.", "To convert Celsius to Fahrenheit, multiply by ____ and add 32."
+- Test the ability to apply concepts, rules, and procedures`,
+
+    [BloomLevel.ANALYZE]: `BLOOM'S LEVEL: ANALYZE (Fill-in-the-Blank)
+- Assess ability to break down or identify components in a structure
+- Example stems: "In a persuasive essay, the ____ provides evidence supporting the claim.", "The independent variable in this experiment is ____."
+- Use blanks to test recognition of parts, relationships, or structures`,
+
+    [BloomLevel.EVALUATE]: `BLOOM'S LEVEL: EVALUATE (Fill-in-the-Blank)
+- Require learners to fill in key evaluative criteria or judgments
+- Example stems: "A valid scientific argument must be supported by ____.", "The most reliable source of evidence in this case is ____."
+- Use blanks to test knowledge of standards, criteria, or evaluative reasoning`,
+
+    [BloomLevel.CREATE]: `BLOOM'S LEVEL: CREATE (Fill-in-the-Blank)
+- Focus on generating new ideas or combining knowledge creatively
+- Example stems: "A possible innovation to reduce plastic waste is ____.", "To design an experiment testing memory, one variable to manipulate could be ____."
+- Use blanks for essential components of new ideas, designs, or plans`,
+
+    [BloomLevel.MIXED]: `BLOOM'S LEVEL: MIXED (Fill-in-the-Blank)
+- Include blanks targeting multiple Bloom’s levels
+- Mix between recall, comprehension, application, analysis, evaluation, and creation
+- Ensure variety in cognitive demand while still suitable for fill-in-the-blank format`
+  };
+
+  return instructions[bloomLevel];
+}
+
 
 function getFillInBlankDifficultyInstruction(difficulty: DifficultyLevel): string {
   const instructions = {
@@ -103,140 +148,4 @@ function getFillInBlankQualityInstructions(config: FillInBlankConfig): string {
 - Test understanding, not just memorization`;
 
   return instructions;
-}
-
-// Alternative simplified version for basic Fill-in-the-Blank generation
-export function buildSimpleFillInBlankPrompt(
-  content: string, 
-  quantity: number = 5, 
-  language: Language = Language.ENGLISH,
-  difficulty: DifficultyLevel = DifficultyLevel.MEDIUM
-): string {
-  
-  const config: FillInBlankConfig = {
-    language,
-    difficulty, 
-    quantity,
-    content,
-    blankType: 'mixed',
-    includeExplanation: false,
-    avoidAmbiguity: true,
-    focusOnKeyPoints: true,
-    provideChoices: false,
-    contextLength: 'medium'
-  };
-
-  return buildFillInBlankPrompt(config);
-}
-
-// Export for backward compatibility with existing QuestionConfig
-export function buildFillInBlankFromQuestionConfig(config: QuestionConfig): string {
-  const fibConfig: FillInBlankConfig = {
-    language: config.language,
-    difficulty: config.difficulty,
-    topic: config.topic,
-    quantity: config.quantity,
-    content: config.content,
-  };
-
-  return buildFillInBlankPrompt(fibConfig);
-}
-
-// Enhanced version with choices for easier answering
-export function buildMultipleChoiceFillInBlankPrompt(
-  content: string,
-  quantity: number = 5,
-  language: Language = Language.ENGLISH,
-  difficulty: DifficultyLevel = DifficultyLevel.MEDIUM,
-): string {
-  
-  const config: FillInBlankConfig = {
-    language,
-    difficulty,
-    quantity,
-    content,
-  };
-
-  return buildFillInBlankPrompt(config);
-}
-
-// Specialized version for vocabulary/terminology testing
-export function buildVocabularyFillInBlankPrompt(
-  content: string,
-  quantity: number = 10,
-  language: Language = Language.ENGLISH
-): string {
-  
-  const config: FillInBlankConfig = {
-    language,
-    difficulty: DifficultyLevel.MEDIUM,
-    quantity,
-    content,
-    topic: 'key terms and vocabulary',
-    blankType: 'single',
-    includeExplanation: true,
-    avoidAmbiguity: true,
-    focusOnKeyPoints: true,
-    provideChoices: true,
-    choicesCount: 4,
-    contextLength: 'short'
-  };
-
-  return buildFillInBlankPrompt(config);
-}
-
-// Advanced version for testing processes and sequences
-export function buildProcessFillInBlankPrompt(
-  content: string,
-  quantity: number = 5,
-  language: Language = Language.ENGLISH,
-  difficulty: DifficultyLevel = DifficultyLevel.HIGH
-): string {
-  
-  const config: FillInBlankConfig = {
-    language,
-    difficulty,
-    quantity,
-    content,
-    topic: 'processes, sequences, and procedures',
-    blankType: 'multiple',
-    includeExplanation: true,
-    avoidAmbiguity: true,
-    focusOnKeyPoints: true,
-    provideChoices: false,
-    contextLength: 'long'
-  };
-
-  return buildFillInBlankPrompt(config);
-}
-
-// Utility function for creating cloze-style tests (multiple blanks in paragraphs)
-export function buildClozeTestPrompt(
-  content: string,
-  quantity: number = 3,
-  language: Language = Language.ENGLISH,
-  difficulty: DifficultyLevel = DifficultyLevel.MEDIUM
-): string {
-  
-  const config: FillInBlankConfig = {
-    language,
-    difficulty,
-    quantity,
-    content,
-    blankType: 'multiple',
-    includeExplanation: false,
-    avoidAmbiguity: true,
-    focusOnKeyPoints: true,
-    provideChoices: false,
-    contextLength: 'long'
-  };
-
-  return buildFillInBlankPrompt(config) + `
-
-CLOZE TEST SPECIFIC INSTRUCTIONS:
-- Create paragraph-length passages with 4-6 strategic blanks per passage
-- Remove key terms, connecting words, and important concepts
-- Ensure passages remain comprehensible despite missing words
-- Test both content knowledge and language comprehension
-- Space blanks appropriately throughout the passage`;
 }

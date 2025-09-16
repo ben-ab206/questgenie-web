@@ -169,6 +169,7 @@ export interface FillInBlankConfig {
   topic?: string;
   quantity: number;
   content: string;
+  bloom_level: BloomLevel;
   includeExplanation?: boolean;
   avoidAmbiguity?: boolean;
   focusOnKeyPoints?: boolean;
@@ -184,6 +185,7 @@ export interface TrueFalseConfig {
   topic?: string;
   quantity: number;
   content: string;
+  bloom_level: BloomLevel;
   includeExplanation?: boolean;
   avoidAmbiguity?: boolean;
   focusOnKeyPoints?: boolean;
@@ -203,6 +205,7 @@ export interface ShortAnswerConfig {
   language: Language;
   difficulty: DifficultyLevel;
   quantity: number;
+  bloom_level: BloomLevel;
   content: string;
   answerLength?: 'brief' | 'moderate' | 'detailed';
 }
@@ -214,6 +217,7 @@ export interface ShortAnswerResponse {
 export interface LongAnswerConfig {
   language: Language;
   difficulty: DifficultyLevel;
+  bloom_level: BloomLevel;
   quantity: number;
   content: string;
   answerLength?: 'standard' | 'extended' | 'comprehensive';
@@ -230,6 +234,7 @@ export interface MatchingQuestionConfig {
   difficulty: DifficultyLevel;
   quantity: number;
   content: string;
+  bloom_level: BloomLevel;
   topic?: string;
   matchingType?: 'definition' | 'concept' | 'cause-effect' | 'process' | 'classification' | 'general';
 }

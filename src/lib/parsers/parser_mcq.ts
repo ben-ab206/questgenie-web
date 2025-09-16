@@ -14,6 +14,22 @@ export function parseMCQResponse(response: string, config: QuestionConfig): Ques
   } catch (error) {
     console.error('MCQ Parse error:', error);
     console.error('Raw response preview:', response.substring(0, 500));
+    
+    // Enhanced error logging for Burmese/Unicode issues
+    if (error instanceof SyntaxError && error.message.includes('position')) {
+      const match = error.message.match(/position (\d+)/);
+      if (match) {
+        const position = parseInt(match[1]);
+        const start = Math.max(0, position - 100);
+        const end = Math.min(response.length, position + 100);
+        const context = response.substring(start, end);
+        console.error('JSON error context:', context);
+        console.error('Character codes around error:', 
+          context.split('').map((char, i) => `${char}(${char.charCodeAt(0)})`).slice(Math.max(0, position - start - 10), position - start + 10)
+        );
+      }
+    }
+    
     throw new Error(`Failed to parse MCQ AI response: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
@@ -21,19 +37,66 @@ export function parseMCQResponse(response: string, config: QuestionConfig): Ques
 function extractJsonFromResponse(response: string): string {
   let cleaned = response.trim();
   
-  // Remove common AI response prefixes
-  cleaned = cleaned.replace(/^(Here's the|Here are the|The questions are:|Generated questions:).*?\n/i, '');
-  
-  // Remove markdown code blocks
-  cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-  cleaned = cleaned.replace(/^[^[\{]*/, '').replace(/[^}\]]*$/, '');
+  // Use the same robust cleanup as matching parser
+  cleaned = cleaned
+    .replace(/^(Here's the|Here are the|The questions are:|Generated questions:|MCQ questions:).*?\n/i, '')
+    .replace(/^```(?:json)?\n?/, '')
+    .replace(/\n?```$/, '')
+    .replace(/^[^[\{]*/, '')
+    .replace(/[^}\]]*$/, '');
 
+  // Use the same JSON matching logic as matching parser
   const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
   if (!jsonMatch) {
     throw new Error('No valid JSON array found in MCQ response');
   }
 
-  return jsonMatch[0];
+  let jsonStr = jsonMatch[0];
+  
+  // Enhanced Unicode and special character handling
+  jsonStr = cleanupJsonForUnicode(jsonStr);
+  
+  return jsonStr;
+}
+
+function cleanupJsonForUnicode(jsonStr: string): string {
+  // Remove trailing commas before closing brackets/braces
+  jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
+  
+  // Handle Unicode characters more carefully - don't escape already valid Unicode
+  // Remove any control characters that might interfere with JSON parsing
+  jsonStr = jsonStr.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  
+  // Fix common issues with quotes in Unicode text
+  // Be very careful not to break valid JSON structure
+  jsonStr = fixQuotesInUnicodeText(jsonStr);
+  
+  return jsonStr;
+}
+
+function fixQuotesInUnicodeText(jsonStr: string): string {
+  // This function needs to be very careful with Unicode text
+  // Split into lines and process each line to avoid breaking JSON structure
+  const lines = jsonStr.split('\n');
+  
+  return lines.map(line => {
+    // Only process lines that look like they contain string values
+    if (!line.includes(': "') && !line.includes('": "')) {
+      return line;
+    }
+    
+    // Use a more careful approach - don't modify lines that already look correct
+    const quoteCount = (line.match(/"/g) || []).length;
+    
+    // If we have an even number of quotes, the line is probably fine
+    if (quoteCount % 2 === 0) {
+      return line;
+    }
+    
+    // For odd number of quotes, there might be an unescaped quote
+    // This is risky with Unicode, so we'll be very conservative
+    return line;
+  }).join('\n');
 }
 
 function createMCQQuestion(item: any, config: QuestionConfig, index: number): Question {
@@ -49,7 +112,7 @@ function createMCQQuestion(item: any, config: QuestionConfig, index: number): Qu
       language: config.language,
       question: String(item.question).trim(),
       options: item.options,
-      mcq_answers: correctAnswers, // All correct answer keys
+      mcq_answers: correctAnswers,
       explanation: item.explanation ? String(item.explanation).trim() : undefined,
     };
   } catch (error) {
@@ -85,7 +148,7 @@ function validateMCQItem(item: any, index: number): void {
     throw new Error(`correctAnswer must be an array for MCQ`);
   }
 
-  // Validate correctAnswer has at least 1 answer (removed upper limit)
+  // Validate correctAnswer has at least 1 answer
   if (item.correctAnswer.length < 1) {
     throw new Error(`correctAnswer must have at least 1 answer, got ${item.correctAnswer.length}`);
   }
@@ -96,7 +159,7 @@ function validateMCQItem(item: any, index: number): void {
     throw new Error(`correctAnswer contains invalid options: ${invalidAnswers.join(', ')}`);
   }
 
-  // Optional: Validate that not all options are correct (would make the question meaningless)
+  // Validate that not all options are correct
   const totalOptions = Object.keys(item.options).length;
   if (item.correctAnswer.length >= totalOptions) {
     throw new Error(`correctAnswer cannot include all available options (${totalOptions} options, ${item.correctAnswer.length} correct)`);
@@ -121,12 +184,12 @@ function validateAndNormalizeCorrectAnswers(correctAnswer: any, options: Options
   // Remove duplicates and sort for consistency
   const uniqueAnswers = [...new Set(normalizedAnswers)].sort();
   
-  // Validate minimum answers (removed maximum limit)
+  // Validate minimum answers
   if (uniqueAnswers.length < 1) {
     throw new Error(`MCQ must have at least 1 correct answer, got ${uniqueAnswers.length}`);
   }
 
-  // Optional: Validate that not all options are correct
+  // Validate that not all options are correct
   const totalOptions = Object.keys(options).length;
   if (uniqueAnswers.length >= totalOptions) {
     throw new Error(`MCQ cannot have all options as correct (${totalOptions} options, ${uniqueAnswers.length} correct)`);
@@ -135,7 +198,43 @@ function validateAndNormalizeCorrectAnswers(correctAnswer: any, options: Options
   return uniqueAnswers;
 }
 
-// Legacy parser for backward compatibility with old MCQ format
+// Add flexible parsing similar to matching parser
+export function parseFlexibleMCQResponse(response: string, config: QuestionConfig): Question[] {
+  try {
+    const jsonContent = extractJsonFromResponse(response);
+    const parsedData = JSON.parse(jsonContent);
+
+    if (!Array.isArray(parsedData)) {
+      throw new Error('Response must be a JSON array');
+    }
+
+    return parsedData.map((item, index) => {
+      // Handle flexible field names
+      const question = item.question || item.prompt || item.text || item.query;
+      const options = item.options || item.choices || item.answers;
+      const correctAnswer = item.correctAnswer || item.correct || item.solution || item.key;
+      const explanation = item.explanation || item.reasoning || item.justification;
+
+      if (!question || !options || !correctAnswer) {
+        throw new Error(`Question ${index + 1}: Missing required fields`);
+      }
+
+      const normalizedItem = {
+        question,
+        options,
+        correctAnswer,
+        explanation
+      };
+
+      return createMCQQuestion(normalizedItem, config, index);
+    });
+  } catch (error) {
+    console.error('Flexible MCQ Parse error:', error);
+    throw new Error(`Failed to parse flexible MCQ response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// Legacy parser for backward compatibility
 export function parseLegacyMCQResponse(response: string, config: QuestionConfig): Question[] {
   try {
     const jsonContent = extractJsonFromResponse(response);
@@ -238,7 +337,7 @@ export function validateMCQQuestions(questions: Question[]): void {
       throw new Error(`Question ${index + 1}: Invalid MCQ answers: ${invalidAnswers.join(', ')}`);
     }
 
-    // Optional: Validate that not all options are correct
+    // Validate that not all options are correct
     if (question.mcq_answers.length >= availableKeys.length) {
       throw new Error(`Question ${index + 1}: MCQ cannot have all options as correct`);
     }
